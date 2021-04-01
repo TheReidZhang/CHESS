@@ -1,17 +1,35 @@
-from piece_interface import PieceInterface, Color
-from coordinate import Coordinate
-from chess.chess_game import ChessGame
+from chess.piece.piece_interface import PieceInterface, Color
+from chess.piece.coordinate import Coordinate
 
 
 class Knight(PieceInterface):
-    def __init__(self, game: ChessGame, color: Color, coordinate: Coordinate):
-        super(game, color, coordinate)
-
-    def can_move(self, coordinate: Coordinate) -> bool:
-        raise NotImplementedError
-
-    def get_captures(self) -> dict:
-        raise NotImplementedError
-
     def get_moves(self) -> dict:
-        raise NotImplementedError
+        coordinate = self.game.get_piece_coordinate(self)
+        row, col = coordinate.get_tuple()
+        directions = [[1, 2],
+                      [1, -2],
+                      [-1, 2],
+                      [-1, -2],
+                      [2, 1],
+                      [2, -1],
+                      [-2, 1],
+                      [-2, -1]]
+        moves = []
+
+        for direction in directions:
+            ret_row = row + direction[0]
+            ret_col = col + direction[1]
+            if not PieceInterface.is_valid_coord(ret_row, ret_col):
+                continue
+            tar_color = self.game.board[ret_row][ret_col].get_color()
+            if tar_color != self.color:
+                moves.append(Coordinate(ret_row, ret_col))
+        return moves
+
+    def get_color(self) -> Color:
+        return self.color
+
+    def to_string(self) -> str:
+        if self.color == Color.WHITE:
+            return "N"
+        return "n"
