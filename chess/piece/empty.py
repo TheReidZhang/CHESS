@@ -1,5 +1,4 @@
 from chess.piece.piece_interface import PieceInterface, Color
-from chess.piece.coordinate import Coordinate
 
 
 class Empty(PieceInterface):
