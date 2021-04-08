@@ -1,5 +1,5 @@
 from flask import Flask, request, json
-from chess.driver import Driver
+from api.driver import Driver
 
 app = Flask(__name__)
 driver = Driver()

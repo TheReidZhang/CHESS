@@ -2,7 +2,7 @@ from chess.chess_game import ChessGame
 from chess.piece.coordinate import Coordinate
 from chess_ai.simple_ai import SimpleAI
 import random
-import chess.sql_execute as ex
+import api.sql_execute as ex
 import mysql.connector
 import time
 import datetime

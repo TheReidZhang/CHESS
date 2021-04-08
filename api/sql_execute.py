@@ -10,4 +10,3 @@ def execute_script(mycursor, filename):
                 mycursor.execute(command)
         except IOError:
             print("Command skipped: ")
-
