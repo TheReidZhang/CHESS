@@ -177,8 +177,7 @@ class TestGetHistory(unittest.TestCase):
                               "castling": False, "en_passant": False,
                               "en_passant_target_notation": "-",
                               "half_move": 0, "full_move": 1}]
-        expect = {"src":  "(1,0)", "tar": "(2,0)",
-                  "src_piece": "P", "tar_piece": "*", "castling": False,
+        expect = {"src": "(1,0)", "tar": "(2,0)", "castling": False,
                   "en_passant": False, "en_passant_target_notation": "-",
                   "half_move": 0, "full_move": 1, "step": 1}
         self.assertEqual(self.game.get_history(), expect)
@@ -195,8 +194,8 @@ class TestGetHistory(unittest.TestCase):
                               "castling": False, "en_passant": False,
                               "en_passant_target_notation": "a6",
                               "half_move": 0, "full_move": 1}]
-        expect = {"src":  "(6,0)", "tar": "(4,0)",
-                  "src_piece": "p", "tar_piece": "*", "castling": False,
+        expect = {"src": "(6,0)", "tar": "(4,0)",
+                  "castling": False,
                   "en_passant": False, "en_passant_target_notation": "a6",
                   "half_move": 0, "full_move": 1, "step": 2}
         self.assertEqual(self.game.get_history(), expect)
@@ -616,13 +615,17 @@ class TestChessGame(unittest.TestCase):
 
     def test_init_history_restores_expected_history(self):
         game = ChessGame()
-        game.init_history([(15067, '(1,3)', '(3,3)', 'P', '*', 0, 0, 'd3', 0, 1, 1),
-                           (15067, '(4,4)', '(5,2)', 'n', '*', 0, 0, '-', 50, 31, 60)])
+        game.init_history([{"session_id": 15067, "src": '(1,3)', "tar": '(3,3)', "castling": False, "en_passant": False,
+                            "en_passant_target_notation": 'd3', "half_move": 0, "full_move": 1},
+                           {"session_id": 15067, "src": '(4,4)', "tar": '(5,2)', "castling": False, "en_passant": False,
+                            "en_passant_target_notation": '-', "half_move": 50, "full_move": 31}])
         self.assertEqual(len(game.history), 2)
         self.assertEqual(game.history[-1]["src"], Coordinate(4, 4))
         self.assertEqual(game.history[-1]["tar"], Coordinate(5, 2))
 
-        game.init_history([(32489, '(2,2)', '(3,3)', 'P', '*', 0, 0, 'd3', 0, 1, 1),
-                           (32489, '(3,7)', '(1,4)', 'n', '*', 0, 0, '-', 50, 31, 60)])
+        game.init_history([{"session_id": 32489, "src": '(2,2)', "tar": '(3,3)', "castling": False, "en_passant": False,
+                            "en_passant_target_notation": 'd3', "half_move": 0, "full_move": 1},
+                           {"session_id": 32489, "src": '(3,7)', "tar": '(1,4)', "castling": False, "en_passant": False,
+                            "en_passant_target_notation": '-', "half_move": 50, "full_move": 31}])
         self.assertEqual(game.history[-1]["src"], Coordinate(3, 7))
         self.assertEqual(game.history[-1]["tar"], Coordinate(1, 4))
