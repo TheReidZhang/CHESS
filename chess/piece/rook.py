@@ -1,6 +1,5 @@
 from chess.piece.piece_interface import PieceInterface, Color
 from chess.piece.coordinate import Coordinate
-from chess.chess_game import ChessGame
 
 
 class Rook(PieceInterface):
