@@ -9,7 +9,8 @@ from unittest import TestCase
 
 class TestPawn(TestCase):
     def setUp(self) -> None:
-        self.chess_game = ChessGame(fen="test")
+        fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1"
+        self.chess_game = ChessGame(fen=fen)
         self.chess_game.board[0][4] = King(self.chess_game, Color.WHITE)
         self.chess_game.board[1][4] = Pawn(self.chess_game, Color.WHITE)
         self.chess_game.board[4][5] = Pawn(self.chess_game, Color.WHITE)

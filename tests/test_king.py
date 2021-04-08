@@ -11,7 +11,8 @@ from chess.piece.empty import Empty
 
 class TestRook(unittest.TestCase):
     def setUp(self) -> None:
-        self.chess_game = ChessGame(fen="test")     # empty board
+        fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1"
+        self.chess_game = ChessGame(fen=fen)     # empty board
         self.chess_game.board[4][4] = King(self.chess_game, Color.WHITE)
         self.chess_game.board[4][1] = King(self.chess_game, Color.BLACK)
         self.chess_game.board[3][3] = Rook(self.chess_game, Color.BLACK)
@@ -19,14 +20,14 @@ class TestRook(unittest.TestCase):
 
     def test_get_moves(self):
         actual = self.chess_game.board[4][4].get_moves()
-        expected = [Coordinate(5, 3),
+        expected = [Coordinate(5, 4),
                     Coordinate(5, 5),
-                    Coordinate(3, 5),
-                    Coordinate(3, 3),
                     Coordinate(4, 5),
+                    Coordinate(3, 5),
+                    Coordinate(3, 4),
+                    Coordinate(3, 3),
                     Coordinate(4, 3),
-                    Coordinate(5, 4),
-                    Coordinate(3, 4)]
+                    Coordinate(5, 3)]
         self.assertEqual(actual, expected)
 
     def test_get_color(self):
@@ -47,24 +48,25 @@ class TestRook(unittest.TestCase):
 
     def test_get_checked_moves(self):
         actual = self.chess_game.board[4][4].get_checked_moves()
-        expected = {"moves": [Coordinate(5, 5),
-                    Coordinate(3, 3),
-                    Coordinate(4, 5),
-                    Coordinate(5, 4)]}
+        expected = {"moves": [Coordinate(5, 4),
+                              Coordinate(5, 5),
+                              Coordinate(4, 5),
+                              Coordinate(3, 3)]}
         self.assertEqual(actual, expected)
 
     def test_get_checked_moves_include_castling(self):
-        chess_game2 = ChessGame(fen="test")
+        fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1"
+        chess_game2 = ChessGame(fen=fen)
         chess_game2.board[0][4] = King(chess_game2, Color.WHITE)
         chess_game2.board[7][4] = King(chess_game2, Color.BLACK)
         chess_game2.board[0][7] = Rook(chess_game2, Color.WHITE)
         chess_game2.board[0][0] = Rook(chess_game2, Color.WHITE)
         actual = chess_game2.board[0][4].get_checked_moves()
-        expected = {'moves': [Coordinate(1, 3),
+        expected = {'moves': [Coordinate(1, 4),
                               Coordinate(1, 5),
                               Coordinate(0, 5),
                               Coordinate(0, 3),
-                              Coordinate(1, 4),
+                              Coordinate(1, 3),
                               Coordinate(0, 6),
                               Coordinate(0, 2)]}
         self.assertEqual(actual, expected)

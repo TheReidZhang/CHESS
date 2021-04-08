@@ -6,7 +6,8 @@ from chess.piece.piece_interface import Color
 
 class TestRook(unittest.TestCase):
     def setUp(self) -> None:
-        self.chess_game = ChessGame(fen="test")     # empty board
+        fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1"
+        self.chess_game = ChessGame(fen=fen)     # empty board
         self.chess_game.board[3][3] = Empty(self.chess_game, Color.EMPTY)
 
     def test_get_moves(self):

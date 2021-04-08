@@ -8,12 +8,16 @@ class Rook(PieceInterface):
         self.firstMove = True
 
     def get_moves(self) -> list:
+        """
+        :return: a list of all available moves of the piece in order
+        by directions (up, right, down, left).
+        """
         coordinate = self.game.get_piece_coordinate(self)
         row, col = coordinate.get_tuple()
-        directions = [[1, 0],
-                      [-1, 0],
-                      [0, 1],
-                      [0, -1]]
+        directions = [[1, 0],   # up
+                      [0, 1],  # right
+                      [-1, 0],  # down
+                      [0, -1]]  # left
         moves = []
 
         for direction in directions:
@@ -31,10 +35,10 @@ class Rook(PieceInterface):
                 ret_col += direction[1]
         return moves
 
-    def get_color(self) -> Color:
-        return self.color
-
     def to_string(self) -> str:
+        """
+        :return: "R" if the color of the piece is Color.WHITE. Otherwise, "r".
+        """
         if self.color == Color.WHITE:
             return "R"
         return "r"

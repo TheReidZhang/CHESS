@@ -6,19 +6,23 @@ from chess.piece.rook import Rook
 class King(PieceInterface):
     def __init__(self, game: 'ChessGame', color: Color):
         super().__init__(game, color)
-        self.firstMove = True
+        self.firstMove = True   # True if the king has not been moved
 
     def get_moves(self) -> dict:
+        """
+        :return: a list of all available moves of the piece in order
+        by directions (up, upper right, right, lower right, down, lower left, left, upper left).
+        """
         coordinate = self.game.get_piece_coordinate(self)
         row, col = coordinate.get_tuple()
-        directions = [[1, -1],
-                      [1, 1],
-                      [-1, 1],
-                      [-1, -1],
-                      [0, 1],
-                      [0, -1],
-                      [1, 0],
-                      [-1, 0]]
+        directions = [[1, 0],       # up
+                      [1, 1],       # upper right
+                      [0, 1],       # right
+                      [-1, 1],      # lower right
+                      [-1, 0],      # down
+                      [-1, -1],     # lower left
+                      [0, -1],      # left
+                      [1, -1]]      # upper left
         moves = []
 
         for direction in directions:
@@ -32,15 +36,19 @@ class King(PieceInterface):
 
         return moves
 
-    def get_color(self) -> Color:
-        return self.color
-
     def to_string(self) -> str:
+        """
+        :return: "K" if the color of the piece is Color.WHITE. Otherwise, "k".
+        """
         if self.color == Color.WHITE:
             return "K"
         return "k"
 
-    def get_checked_moves(self):
+    def get_checked_moves(self) -> dict:
+        """
+        :return: a dictionary. Key is "moves", and value is a list of all available moves that will not
+        make the king being checked after the move.
+        """
         moves = self.get_moves()
         checked_moves = []
         if len(moves) > 0:
@@ -57,12 +65,28 @@ class King(PieceInterface):
         return {"moves": checked_moves}
 
     def castling(self, king_side=True) -> bool:
+        """
+        Castling is available if the following conditions are all met:
+        1. The king is not being checked.
+        2. The king and the rook have not been moved.
+        3. There is no pieces between the king and the rook.
+        4. The king will not be into check.
+
+        :param king_side: True if castling with the rook at king side. Otherwise, False. The default value is False.
+        :return: True if castling available. Otherwise, False.
+        """
         if self.game.is_being_checked() or not self.firstMove or self.rook_has_moved(king_side) \
                 or self.pieces_between_king_and_rook(king_side) or self.into_checked(king_side):
             return False
         return True
 
     def pieces_between_king_and_rook(self, king_side: bool) -> bool:
+        """
+        Check if there is any piece between the king and the rook.
+
+        :param king_side: True if castling with the rook at king side. Otherwise, False.
+        :return: True if there a piece between the king and the rook. Otherwise, False.
+        """
         row = 0 if self.color == Color.WHITE else 7
         if king_side:
             if (self.game.board[row][5].color, self.game.board[row][6].color) != (Color.EMPTY, Color.EMPTY):
@@ -75,6 +99,11 @@ class King(PieceInterface):
         return False
 
     def into_checked(self, king_side: bool) -> bool:
+        """
+        Check if the king will be into check.
+        :param king_side: True if castling with the rook at king side. Otherwise, False.
+        :return: True if the king will be into check. Otherwise, False.
+        """
         row = 0 if self.color == Color.WHITE else 7
         col = 5 if king_side else 2
 
@@ -85,6 +114,11 @@ class King(PieceInterface):
         return False
 
     def rook_has_moved(self, king_side: bool) -> bool:
+        """
+        Check if the rook has been moved.
+        :param king_side: True if castling with the rook at king side. Otherwise, False.
+        :return: True if the rook has been moved. Otherwise, False.
+        """
         rook_row = 0 if self.color == Color.WHITE else 7
         rook_col = 7 if king_side else 0
 
