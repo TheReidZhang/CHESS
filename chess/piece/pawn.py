@@ -4,6 +4,16 @@ from chess.piece.coordinate import Coordinate
 
 class Pawn(PieceInterface):
     def en_passant(self, attack_col: int, row: int, col: int):
+        """
+        Check if en passant is available for the capturing pawn at Coordinate(row, col)
+        and the captured pawn at Coordinate(row, attack_col)
+        En passant only occurred immediately after a pawn makes a move of two squares from its starting square,
+        and it could have been captured by an enemy pawn had it advanced only one square.
+        :param attack_col: the col of captured pawn
+        :param row: the row of the capturing pawn ( same as the row of captured pawn)
+        :param col: the col of the capturing pawn
+        :return: True if en passant is available. Otherwise, False.
+        """
         if len(self.game.history) == 0:
             return False
         last_move = self.game.history[-1]
@@ -15,6 +25,9 @@ class Pawn(PieceInterface):
         return False
 
     def get_moves(self) -> list:
+        """
+        :return: a list of all available moves and captures of a pawn.
+        """
         coordinate = self.game.get_piece_coordinate(self)
         row, col = coordinate.get_tuple()
         direction = self.color.value
@@ -41,10 +54,10 @@ class Pawn(PieceInterface):
                 moves.append(Coordinate(attack_row, attack_col))
         return moves
 
-    def get_color(self) -> Color:
-        return self.color
-
     def to_string(self) -> str:
+        """
+        :return: "K" if the color of the piece is Color.WHITE. Otherwise, "k".
+        """
         if self.color == Color.WHITE:
             return "P"
         return "p"

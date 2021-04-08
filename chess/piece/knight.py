@@ -4,16 +4,20 @@ from chess.piece.coordinate import Coordinate
 
 class Knight(PieceInterface):
     def get_moves(self) -> dict:
+        """
+        :return: a list of all available moves of the piece in order
+        by directions (clockwise).
+        """
         coordinate = self.game.get_piece_coordinate(self)
         row, col = coordinate.get_tuple()
-        directions = [[1, 2],
-                      [1, -2],
+        directions = [[2, 1],
+                      [1, 2],
                       [-1, 2],
-                      [-1, -2],
-                      [2, 1],
-                      [2, -1],
                       [-2, 1],
-                      [-2, -1]]
+                      [-2, -1],
+                      [-1, -2],
+                      [1, -2],
+                      [2, -1]]
         moves = []
 
         for direction in directions:
@@ -26,10 +30,10 @@ class Knight(PieceInterface):
                 moves.append(Coordinate(ret_row, ret_col))
         return moves
 
-    def get_color(self) -> Color:
-        return self.color
-
     def to_string(self) -> str:
+        """
+        :return: "N" if the color of the piece is Color.WHITE. Otherwise, "n".
+        """
         if self.color == Color.WHITE:
             return "N"
         return "n"

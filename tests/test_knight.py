@@ -8,7 +8,8 @@ from chess.piece.coordinate import Coordinate
 
 class TestRook(unittest.TestCase):
     def setUp(self) -> None:
-        self.chess_game = ChessGame(fen="test")     # empty board
+        fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1"
+        self.chess_game = ChessGame(fen=fen)     # empty board
         self.chess_game.board[0][0] = Knight(self.chess_game, Color.WHITE)
         self.chess_game.board[0][2] = Knight(self.chess_game, Color.WHITE)
         self.chess_game.board[1][0] = Knight(self.chess_game, Color.BLACK)
@@ -16,11 +17,11 @@ class TestRook(unittest.TestCase):
 
     def test_get_moves(self):
         actual = self.chess_game.board[1][2].get_moves()
-        expected = [Coordinate(2, 4),
-                    Coordinate(2, 0),
+        expected = [Coordinate(3, 3),
+                    Coordinate(2, 4),
                     Coordinate(0, 4),
                     Coordinate(0, 0),
-                    Coordinate(3, 3),
+                    Coordinate(2, 0),
                     Coordinate(3, 1)]
         self.assertEqual(actual, expected)
 
