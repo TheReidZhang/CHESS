@@ -1,6 +1,7 @@
 from chess.piece.piece_interface import PieceInterface, Color
 from chess.piece.coordinate import Coordinate
 from chess.piece.rook import Rook
+from chess.chess_game import ChessGame
 
 
 class King(PieceInterface):
@@ -8,7 +9,7 @@ class King(PieceInterface):
         super().__init__(game, color)
         self.firstMove = True   # True if the king has not been moved
 
-    def get_moves(self) -> dict:
+    def get_moves(self) -> list:
         """
         :return: a list of all available moves of the piece in order
         by directions (up, upper right, right, lower right, down, lower left, left, upper left).

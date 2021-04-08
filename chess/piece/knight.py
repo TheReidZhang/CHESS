@@ -3,7 +3,7 @@ from chess.piece.coordinate import Coordinate
 
 
 class Knight(PieceInterface):
-    def get_moves(self) -> dict:
+    def get_moves(self) -> list:
         """
         :return: a list of all available moves of the piece in order
         by directions (clockwise).
