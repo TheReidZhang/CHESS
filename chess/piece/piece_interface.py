@@ -1,5 +1,4 @@
 from enum import Enum
-from chess.chess_game import ChessGame
 
 
 class Color(Enum):
