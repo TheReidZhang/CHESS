@@ -2,39 +2,53 @@ from chess.chess_game import ChessGame
 from chess.piece.coordinate import Coordinate
 from chess_ai.simple_ai import SimpleAI
 import random
-import api.sql_execute as ex
-import mysql.connector
-import time
 import datetime
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Boolean
+import os
 
 
 class Driver:
     def __init__(self):
-        self.sessions = {}
-        self.my_db = mysql.connector.connect(
-            host="127.0.0.1",
-            port=3306,  # change to your port
-            user="root",
-            password="zzj991203",  # change to your password
-            auth_plugin='mysql_native_password'
-        )
+        path = r'sqlite:///' + os.getcwd() + r'\game.db'
+        engine = create_engine(path, connect_args={'check_same_thread': False})
+        meta = MetaData()
 
-        self.my_cursor = self.my_db.cursor()
-        ex.execute_script(self.my_cursor, r"SQ.sql")
-        self.my_cursor.execute("SELECT * FROM current_game")
-        r = self.my_cursor.fetchall()
-        for ele in r:
-            session_id = ele[0]
-            fen = ele[1]
+        self.current_game = Table(
+            'game', meta,
+            Column('session_id', Integer, primary_key=True),
+            Column('fen', String),
+            Column('status', String),
+            Column('start_time', DateTime),
+            Column('last_update', DateTime))
+
+        self.history = Table(
+            'history', meta,
+            Column('session_id', Integer, primary_key=True),
+            Column('step', Integer, primary_key=True),
+            Column('src', String),
+            Column('tar', String),
+            Column('castling', Boolean),
+            Column('en_passant', Boolean),
+            Column('en_passant_target_notation', String),
+            Column('half_move', Integer),
+            Column('full_move', Integer))
+
+        meta.create_all(engine)
+        self.conn = engine.connect()
+
+        self.sessions = {}
+        sessions_info = self.conn.execute(self.current_game.select())
+        for session in sessions_info:
+            session_id = session["session_id"]
+            fen = session["fen"]
             game = ChessGame(fen)
             self.sessions[session_id] = game
 
-        for session in self.sessions:
-            sql = "SELECT * FROM history WHERE session=" + str(session) + " ORDER BY step"
-            self.my_cursor.execute(sql)
-            r = self.my_cursor.fetchall()
-            self.sessions[session].init_history(r)
-            self.my_db.commit()
+        for session_id in self.sessions:
+            session_history = self.conn.execute(self.history.select().where(self.history.c.session_id == session_id).
+                                                order_by(self.history.c.step))
+            game = self.sessions[session_id]
+            game.init_history(session_history)
 
     def generate_unique_session_id(self) -> int:
         find_unique_session_id = False
@@ -52,20 +66,20 @@ class Driver:
         session_id = self.generate_unique_session_id()
         game = ChessGame()
         self.sessions[session_id] = game
-        sql = "insert into current_game (session, start_time, last_update, fen, status) Values (%s,%s,%s,%s,%s)"
-        ts = time.time()
-        timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        time = datetime.datetime.now()
         fen = game.get_fen()
         status = game.check_game_status()
-        self.my_cursor.execute(sql, (session_id, timestamp, timestamp, fen, status))
-        self.my_db.commit()
+        self.conn.execute(self.current_game.insert(), {"session_id": session_id,
+                                                       "status": status,
+                                                       "fen": fen,
+                                                       "start_time": time,
+                                                       "last_update": time})
         return {"session_id": session_id}
 
     def resume_game(self) -> dict:
-        self.my_cursor.execute("SELECT * FROM current_game")
-        r = self.my_cursor.fetchall()
+        ret = self.conn.execute(self.current_game.select())
         lst = []
-        for ele in r:
+        for ele in ret:
             session_id = ele[0]
             status = ele[2]
             start_time = ele[3]
@@ -74,7 +88,6 @@ class Driver:
                 lst.append({"session_id": session_id,
                             "start_time": start_time,
                             "last_update": last_update})
-        self.my_db.commit()
         return {"resume_list": lst}
 
     def get_info(self, request: dict) -> dict:
@@ -127,25 +140,34 @@ class Driver:
 
     def update_history(self, session_id):
         game = self.sessions[session_id]
-        his = game.get_history()
-        if his:
-            sql = "INSERT INTO history (src, tar, src_piece, tar_piece, castling, " \
-                  "en_passant, en_passant_target_notation, half_move, full_move, step, session) " \
-                  "VALUES (%s, %s, %s, %s, %s, %s, %s, %s,  %s, %s, %s)"
-            val = (his["src"], his["tar"], his["src_piece"], his["tar_piece"], his["castling"], his["en_passant"],
-                   his["en_passant_target_notation"], his["half_move"], his["full_move"], his["step"], session_id)
-            self.my_cursor.execute(sql, val)
-            self.my_db.commit()
+        game_history = game.get_history()
+        if game_history:
+            src = game_history["src"]
+            tar = game_history["tar"]
+            castling = game_history["castling"]
+            en_passant = game_history["en_passant"]
+            en_passant_target_notation = game_history["en_passant_target_notation"]
+            half_move = game_history["half_move"]
+            full_move = game_history["full_move"]
+            step = game_history["step"]
+
+            self.conn.execute(self.history.insert(), {"session_id": session_id,
+                                                      "src": src,
+                                                      "tar": tar,
+                                                      "castling": castling,
+                                                      "en_passant": en_passant,
+                                                      "en_passant_target_notation": en_passant_target_notation,
+                                                      "half_move": half_move,
+                                                      "full_move": full_move,
+                                                      "step": step})
 
     def update_current(self, session_id):
         game = self.sessions[session_id]
-        sql = "INSERT INTO current_game (fen, status, last_update, session) VALUES (%s, %s, %s, %s)" \
-              "ON DUPLICATE KEY UPDATE" \
-              " fen=VALUES(fen)," \
-              "status=VALUES(status), last_update=VALUES(last_update)"
-        status = game.check_game_status()
+        time = datetime.datetime.now()
         fen = game.get_fen()
-        ts = time.time()
-        timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        self.my_cursor.execute(sql, (fen, status, timestamp, session_id))
-        self.my_db.commit()
+        status = game.check_game_status()
+        self.conn.execute(self.current_game.update().where(self.current_game.c.session_id == session_id),
+                          {"session_id": session_id,
+                           "status": status,
+                           "fen": fen,
+                           "last_update": time})

@@ -35,22 +35,22 @@ class ChessGame:
             fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         self.load_fen(fen)
 
-    def init_history(self, history: list):
+    def init_history(self, history):
         for ele in history:
-            src = ele[1]
+            src = ele["src"]
             row, col = tuple(map(int, re.findall(r'[0-9]+', src)))
             src = Coordinate(row, col)
-            tar = ele[2]
+            tar = ele["tar"]
             row, col = tuple(map(int, re.findall(r'[0-9]+', tar)))
             tar = Coordinate(row, col)
             # no use rn
             src_piece = self.empty_cell
             tar_piece = self.empty_cell
-            castling = ele[5]
-            en_passant = ele[6]
-            en_passant_target_notation = ele[7]
-            half_move_clock = ele[8]
-            full_move_clock = ele[9]
+            castling = ele["castling"]
+            en_passant = ele["en_passant"]
+            en_passant_target_notation = ele["en_passant_target_notation"]
+            half_move_clock = ele["half_move"]
+            full_move_clock = ele["full_move"]
             self.history.append({"src": src, "tar": tar, "src_piece": src_piece,
                                  "tar_piece": tar_piece, "castling": castling, "en_passant": en_passant,
                                  "en_passant_target_notation": en_passant_target_notation,
@@ -158,13 +158,10 @@ class ChessGame:
             step = len(self.history)
             src = str(his["src"])
             tar = str(his["tar"])
-            src_piece = his["src_piece"].to_string()
-            tar_piece = his["tar_piece"].to_string()
             half_move = his["half_move"]
             full_move = his["full_move"]
             en_passant_target_notation = his["en_passant_target_notation"]
-            return {"src": src, "tar": tar, "src_piece": src_piece,
-                    "tar_piece": tar_piece, "castling": his["castling"], "en_passant": his["en_passant"],
+            return {"src": src, "tar": tar, "castling": his["castling"], "en_passant": his["en_passant"],
                     "en_passant_target_notation": en_passant_target_notation,
                     "half_move": half_move,
                     "full_move": full_move, "step": step}
