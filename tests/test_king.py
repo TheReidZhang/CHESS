@@ -74,7 +74,8 @@ class TestRook(unittest.TestCase):
 
 class TestCastlingFunctions(unittest.TestCase):
     def setUp(self) -> None:
-        self.chess_game = ChessGame(fen="test")  # empty board
+        fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1"
+        self.chess_game = ChessGame(fen=fen)  # empty board
         self.chess_game.board[0][4] = King(self.chess_game, Color.WHITE)
         self.chess_game.board[0][7] = Rook(self.chess_game, Color.WHITE)
         self.chess_game.board[0][0] = Rook(self.chess_game, Color.WHITE)
