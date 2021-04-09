@@ -15,7 +15,7 @@ class Driver:
         chess game instance.
         """
         path = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
-        engine = create_engine(path, connect_args={'check_same_thread': False})
+        self.engine = create_engine(path, connect_args={'check_same_thread': False})
         meta = MetaData()
 
         self.current_game = Table(
@@ -38,11 +38,11 @@ class Driver:
             Column('half_move', Integer),
             Column('full_move', Integer))
 
-        meta.create_all(engine)
-        self.conn = engine.connect()
+        meta.create_all(self.engine)
 
         self.sessions = {}
-        sessions_info = self.conn.execute(self.current_game.select())
+        conn = self.engine.connect()
+        sessions_info = conn.execute(self.current_game.select())
         for session in sessions_info:
             session_id = session["session_id"]
             fen = session["fen"]
@@ -50,10 +50,11 @@ class Driver:
             self.sessions[session_id] = game
 
         for session_id in self.sessions:
-            session_history = self.conn.execute(self.history.select().where(self.history.c.session_id == session_id).
-                                                order_by(self.history.c.step))
+            session_history = conn.execute(self.history.select().where(self.history.c.session_id == session_id).
+                                           order_by(self.history.c.step))
             game = self.sessions[session_id]
             game.init_history(session_history)
+        conn.close()
 
     def generate_unique_session_id(self) -> int:
         """
@@ -82,11 +83,13 @@ class Driver:
         time = datetime.datetime.now()
         fen = game.get_fen()
         status = game.check_game_status()
-        self.conn.execute(self.current_game.insert(), {"session_id": session_id,
-                                                       "status": status,
-                                                       "fen": fen,
-                                                       "start_time": time,
-                                                       "last_update": time})
+        conn = self.engine.connect()
+        conn.execute(self.current_game.insert(), {"session_id": session_id,
+                                                  "status": status,
+                                                  "fen": fen,
+                                                  "start_time": time,
+                                                  "last_update": time})
+        conn.close()
         return {"session_id": session_id}
 
     def resume_game(self) -> dict:
@@ -95,7 +98,8 @@ class Driver:
         :return: A dict which only has one key "resume-list" and value as a list of dict storing session id,
         start time, and last update
         """
-        ret = self.conn.execute(self.current_game.select())
+        conn = self.engine.connect()
+        ret = conn.execute(self.current_game.select())
         lst = []
         for ele in ret:
             session_id = ele[0]
@@ -106,6 +110,7 @@ class Driver:
                 lst.append({"session_id": session_id,
                             "start_time": start_time,
                             "last_update": last_update})
+        conn.close()
         return {"resume_list": lst}
 
     def get_info(self, request: dict) -> dict:
@@ -187,16 +192,17 @@ class Driver:
             half_move = game_history["half_move"]
             full_move = game_history["full_move"]
             step = game_history["step"]
-
-            self.conn.execute(self.history.insert(), {"session_id": session_id,
-                                                      "src": src,
-                                                      "tar": tar,
-                                                      "castling": castling,
-                                                      "en_passant": en_passant,
-                                                      "en_passant_target_notation": en_passant_target_notation,
-                                                      "half_move": half_move,
-                                                      "full_move": full_move,
-                                                      "step": step})
+            conn = self.engine.connect()
+            conn.execute(self.history.insert(), {"session_id": session_id,
+                                                 "src": src,
+                                                 "tar": tar,
+                                                 "castling": castling,
+                                                 "en_passant": en_passant,
+                                                 "en_passant_target_notation": en_passant_target_notation,
+                                                 "half_move": half_move,
+                                                 "full_move": full_move,
+                                                 "step": step})
+            conn.close()
 
     def update_current(self, session_id: int) -> None:
         """
@@ -208,8 +214,10 @@ class Driver:
         time = datetime.datetime.now()
         fen = game.get_fen()
         status = game.check_game_status()
-        self.conn.execute(self.current_game.update().where(self.current_game.c.session_id == session_id),
-                          {"session_id": session_id,
-                           "status": status,
-                           "fen": fen,
-                           "last_update": time})
+        conn = self.engine.connect()
+        conn.execute(self.current_game.update().where(self.current_game.c.session_id == session_id),
+                      {"session_id": session_id,
+                       "status": status,
+                       "fen": fen,
+                       "last_update": time})
+        conn.close()
