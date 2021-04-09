@@ -15,7 +15,7 @@ class PieceInterface:
     def get_moves(self) -> list:
         raise NotImplementedError
 
-    def get_checked_moves(self):
+    def get_checked_moves(self) -> dict:
         """
         :return: a dictionary. Key is "moves", and value is a list of all available moves that will not
         make the same side king being checked after the move.
@@ -36,7 +36,7 @@ class PieceInterface:
         return self.color
 
     @staticmethod
-    def is_valid_coord(row: int, col: int):
+    def is_valid_coord(row: int, col: int) -> bool:
         """
         Check if a Coordinate(row, col) is valid.
         :param row: the index of rows of the board

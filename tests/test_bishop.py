@@ -35,7 +35,6 @@ class TestRook(unittest.TestCase):
         expected = {'moves': [Coordinate(3, 3)]}
         self.assertEqual(actual, expected)
 
-
     def test_get_color(self):
         actual_w = self.chess_game.board[0][0].get_color()
         actual_b = self.chess_game.board[3][3].get_color()
