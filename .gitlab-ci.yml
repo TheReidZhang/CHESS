@@ -27,4 +27,4 @@ before_script:
 
 test:
   script:
-    - PYTHONPATH=. pytest --cov=chess tests/
+    - PYTHONPATH=. pytest --cov=chess --cov=api tests/
