@@ -237,8 +237,8 @@ class ChessGame:
     def get_castling_notation(self):
         """
 
-        :return: A string which expresses which rooks are available for castling. If neither side can castle, this is "-".
-                Otherwise, this has one or more letters: "K" (White can castle king_side), "Q" (White can castle
+        :return: A string which expresses which rooks are available for castling. If neither side can castle, this is
+                "-". Otherwise, this has one or more letters: "K" (White can castle king_side), "Q" (White can castle
                 queen_side), "k" (Black can castle king_side), and/or "q" (Black can castle queen_side). A move that
                 temporarily prevents castling does not negate this notation.
         """
