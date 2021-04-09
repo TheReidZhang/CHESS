@@ -9,6 +9,11 @@ import os
 
 class Driver:
     def __init__(self):
+        """
+        Set up database using SQLite and put the db file under the same directory if db file does not exit.
+        Connect to the database, fetch data and create dict sessions where key is session_id and value is
+        chess game instance.
+        """
         path = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
         engine = create_engine(path, connect_args={'check_same_thread': False})
         meta = MetaData()
@@ -51,6 +56,10 @@ class Driver:
             game.init_history(session_history)
 
     def generate_unique_session_id(self) -> int:
+        """
+        Generate unique session id.
+        :return: A unique session id
+        """
         find_unique_session_id = False
         random_session_id = 0
         while find_unique_session_id is False:
@@ -62,7 +71,11 @@ class Driver:
                     break
         return random_session_id
 
-    def create_game(self):
+    def create_game(self) -> dict:
+        """
+        Create a new chess game in put it in the dictionary, store the data in the database.
+        :return: A dict where only has one key "session_id"
+        """
         session_id = self.generate_unique_session_id()
         game = ChessGame()
         self.sessions[session_id] = game
@@ -77,6 +90,11 @@ class Driver:
         return {"session_id": session_id}
 
     def resume_game(self) -> dict:
+        """
+        Get all on-going unfinished sessions and their start time and last update time.
+        :return: A dict which only has one key "resume-list" and value as a list of dict storing session id,
+        start time, and last update
+        """
         ret = self.conn.execute(self.current_game.select())
         lst = []
         for ele in ret:
@@ -91,6 +109,11 @@ class Driver:
         return {"resume_list": lst}
 
     def get_info(self, request: dict) -> dict:
+        """
+        Get the game info of a certain game.
+        :param request: A dict with one key "session_id"
+        :return: A dict with key "fen", "status", and "history"
+        """
         session_id = request["session_id"]
         game = self.sessions[session_id]
         fen = game.get_fen()
@@ -99,7 +122,12 @@ class Driver:
         history = game.get_game_history()
         return {"fen": fen, "status": status, "turn": turn, "history": history}
 
-    def update_game(self, request: dict):
+    def update_game(self, request: dict) -> dict:
+        """
+        Update a certain game from source to target, and promotion role if occurred.
+        :param request: A dict including session id, source coordinate, target coordinate, and promotion role.
+        :return: A dict including info about update validation, whether being checked, game status and turn color.
+        """
         session_id = request["session_id"]
         src = request["src"]
         tar = request["tar"]
@@ -119,7 +147,6 @@ class Driver:
         if status == "Continue" and valid:
             ai = SimpleAI(game)
             src_row, src_col, tar_row, tar_col = ai.get_next_move()
-            # print(str(src_row) + " " + str(src_col) + " " + str(tar_row) + " " + str(tar_col))
             src = Coordinate(src_row, src_col)
             tar = Coordinate(tar_row, tar_col)
             valid = game.update(src, tar, "Queen")
@@ -132,13 +159,23 @@ class Driver:
         return {"valid": valid, "is_being_checked": is_being_checked, "game_status": status, "turn": turn}
 
     def get_checked_moves(self, request: dict) -> dict:
+        """
+        Get all valid moves which won't let you be checked in certain game for a coordinate.
+        :param request: A dict including session id and piece coordinate
+        :return: A dict which including all valid moves which won't let you be checked in certain game for a coordinate.
+        """
         session_id = request["session_id"]
         coordinate = request["coordinate"]
         coordinate = Coordinate.decode(coordinate)
         game = self.sessions[session_id]
         return game.get_checked_moves(coordinate)
 
-    def update_history(self, session_id):
+    def update_history(self, session_id: int):
+        """
+        Helper function which will update history table.
+        :param session_id: Game session id which needs to update
+        :return: None
+        """
         game = self.sessions[session_id]
         game_history = game.get_history()
         if game_history:
@@ -161,7 +198,12 @@ class Driver:
                                                       "full_move": full_move,
                                                       "step": step})
 
-    def update_current(self, session_id):
+    def update_current(self, session_id: int):
+        """
+        Helper function which will update game table.
+        :param session_id: Game session id which needs to update
+        :return: None
+        """
         game = self.sessions[session_id]
         time = datetime.datetime.now()
         fen = game.get_fen()
