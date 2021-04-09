@@ -170,7 +170,7 @@ class Driver:
         game = self.sessions[session_id]
         return game.get_checked_moves(coordinate)
 
-    def update_history(self, session_id: int):
+    def update_history(self, session_id: int) -> None:
         """
         Helper function which will update history table.
         :param session_id: Game session id which needs to update
@@ -198,7 +198,7 @@ class Driver:
                                                       "full_move": full_move,
                                                       "step": step})
 
-    def update_current(self, session_id: int):
+    def update_current(self, session_id: int) -> None:
         """
         Helper function which will update game table.
         :param session_id: Game session id which needs to update

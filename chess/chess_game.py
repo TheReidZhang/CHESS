@@ -15,7 +15,7 @@ class ChessGame:
     def __init__(self, fen="start"):
         """
         Initial game default values.
-        :param fen:
+        :param fen: Fen string notation
         """
         self.board = []
         self.empty_cell = Empty(None, Color.EMPTY)
@@ -102,8 +102,8 @@ class ChessGame:
 
     def update(self, src: Coordinate, tar: Coordinate, role: str) -> bool:
         """
-        Game parameter information will be updated after a valid movement and return True. If the movement is not valid, nothing
-        will be updated, and return False.
+        Game parameter information will be updated after a valid movement and return True. If the movement is not valid,
+        nothing will be updated, and return False.
         :param src: the position of the piece move from
         :param tar: the position of the piece move to
         :param role: promotion role while the pawn reaches the eighth rank to be replaced by.
@@ -183,10 +183,9 @@ class ChessGame:
     def undo(self) -> None:
         """
         Sprint2 mission
-        :return:
+        :return: None
         """
         pass
-        return None
 
     def get_history(self) -> dict:
         """
@@ -223,7 +222,7 @@ class ChessGame:
     def switch_turn(self) -> None:
         """
         After a valid movement, switch the current turn side color
-        :return:
+        :return: None
         """
         if self.turn == Color.WHITE:
             self.turn = Color.BLACK
@@ -234,7 +233,7 @@ class ChessGame:
     def get_turn_notation(self) -> str:
         """
         Get the turn side color notation, "b" expresses Black side, and "w" expresses white side.
-        :return: str
+        :return: turn notation string
         """
         if self.turn == Color.WHITE:
             return "w"
@@ -302,7 +301,7 @@ class ChessGame:
                 4. En passant target square in algebraic notation. If there's no en passant target square, this is "-".
                    If a pawn has just made a two-square move, this is the position "behind" the pawn. This is recorded
                    regardless of whether there is a pawn in position to make an en passant capture.
-                5. Halfmove clock: This is the number of halfmoves since the last capture or pawn advance. The reason
+                5. Halfmove clock: This is the number of half moves since the last capture or pawn advance. The reason
                    for this field is that the value is used in the fifty-move rule.
                 6. Fullmove number: The number of the full move. It starts at 1, and is incremented after Black's move.
         """
@@ -337,7 +336,7 @@ class ChessGame:
     def is_being_checked(self) -> bool:
         """
         To check the current turn side King is checked or not.
-        :return: bool
+        :return: whether being checked
         """
         king_coord = self.king_coordinate(self.turn)
         for row in range(8):
@@ -353,7 +352,7 @@ class ChessGame:
         A boolean value which expresses after this piece movement, the current king is still checked or not
         :param src: the position of a piece move from
         :param tar: the position of a piece move to
-        :return: bool
+        :return: whether being checked if update from src to tar
         """
         src_row, src_col = src.get_tuple()
         tar_row, tar_col = tar.get_tuple()
@@ -372,7 +371,7 @@ class ChessGame:
         return the current turn game status. "Continue" expresses the game could be continued. "Draw" expresses
         draw and game ending, or "WhiteLoss"/"BlackLoss" expresses which color side lose the game and game
         ending.
-        :return: str
+        :return: Game status which including Continue, Draw, BlackLoss, WhiteLoss
         """
         if self.half_move_clock == 50:
             return "Draw"
@@ -400,7 +399,7 @@ class ChessGame:
     def get_piece_coordinate(self, piece: PieceInterface) -> Coordinate:
         """
         Print the game board for the front end using.
-        :return:
+        :return: Piece coordinate
         """
         for row in range(8):
             for col in range(8):
@@ -411,7 +410,7 @@ class ChessGame:
     def print_board(self) -> None:
         """
         Print the game board for the front end using.
-        :return:
+        :return: None
         """
         print()
         for row in range(7, -1, -1):
@@ -436,7 +435,7 @@ class ChessGame:
         """
         Based on the provided fen, recover the game board and game character values.
         :param fen_str: A fen string which should be under fen standard
-        :return: void
+        :return: None
         """
         index, row, col = 0, 7, 0
         field = fen_str.split()
@@ -486,7 +485,7 @@ class ChessGame:
         """
         Get the piece from the given char.
         :param char: A char among (P N B R Q K p n b r q k)
-        :return: Piece interface
+        :return: A piece 
         """
         p = Empty(None, Color.EMPTY)
         if char == "P":
