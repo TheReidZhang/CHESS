@@ -14,6 +14,8 @@ import re
 class ChessGame:
     def __init__(self, fen="start"):
         """
+        Initial game default values.
+        :param fen:
         """
         self.board = []
         self.empty_cell = Empty(None, Color.EMPTY)
@@ -36,6 +38,10 @@ class ChessGame:
         self.load_fen(fen)
 
     def init_history(self, history):
+        """
+        :param history:
+        :return:
+        """
         for ele in history:
             src = ele["src"]
             row, col = tuple(map(int, re.findall(r'[0-9]+', src)))
@@ -58,18 +64,31 @@ class ChessGame:
                                  "full_move": full_move_clock})
 
     def get_game_history(self):
+        """
+
+        :return: return the piece position movement history
+        """
         ret = []
         for ele in self.history:
             ret.append({"src": Coordinate.encode(ele["src"]), "tar": Coordinate.encode(ele["tar"])})
         return ret
 
     def get_turn(self) -> str:
+        """
+
+        :return: the current turn
+        """
         if self.turn == Color.WHITE:
             return "White"
         else:
             return "Black"
 
     def get_checked_moves(self, coordinate: Coordinate) -> dict:
+        """
+        While checkmate, each current turn piece available movements which can release the checkmate.
+        :param coordinate: piece position
+        :return: possible movements while checkmate
+        """
         row, col = coordinate.get_tuple()
         piece = self.board[row][col]
         if piece.get_color() != self.turn or self.check_game_status() != "Continue":
@@ -79,6 +98,14 @@ class ChessGame:
         return {"moves": ret}
 
     def update(self, src: Coordinate, tar: Coordinate, role: str) -> bool:
+        """
+
+        :param src: the position of the piece move from
+        :param tar: the position of the piece move to
+        :param role: promotion role while the pawn reaches the eighth rank to be replaced by.
+        :return: A boolean value which show the movement is valid or not. If the movement is valid, all game parameters
+                 are updated, otherwise no change.
+        """
         src_row, src_col = src.get_tuple()
         src_piece = self.board[src_row][src_col]
         if self.check_game_status() == "Continue" and self.board[src_row][src_col].get_color() == self.turn and \
@@ -98,7 +125,7 @@ class ChessGame:
                         self.en_passant_target_notation = Coordinate(tar_row - 1, tar_col).encode()
                     else:
                         self.en_passant_target_notation = Coordinate(tar_row + 1, tar_col).encode()
-            ####
+            # update the En passant
             if type(src_piece) == King and abs(src_col - tar_col) == 2:
                 castling = True
                 if tar_col > src_col:
@@ -113,7 +140,7 @@ class ChessGame:
                 en_passant = True
                 last_pawn_row, last_pawn_col = self.history[-1]["tar"].get_tuple()
                 self.board[last_pawn_row][last_pawn_col] = self.empty_cell
-            # add
+            # update the movement counts
             self.count += 1
             if self.count % 2 == 0:
                 self.full_move_clock += 1
@@ -121,7 +148,7 @@ class ChessGame:
             self.half_move_clock += 1
             if type(src_piece) == Pawn or type(tar_piece) != Empty:
                 self.half_move_clock = 0
-            #####
+            # update the game history
             self.history.append({"src": src, "tar": tar, "src_piece": src_piece,
                                  "tar_piece": tar_piece, "castling": castling, "en_passant": en_passant,
                                  "en_passant_target_notation": self.en_passant_target_notation,
@@ -150,9 +177,17 @@ class ChessGame:
         return False
 
     def undo(self):
+        """
+        Sprint2 misssion
+        :return:
+        """
         pass
 
     def get_history(self):
+        """
+
+        :return: A dictionary record the game status after the last movement which are used by the front end.
+        """
         if self.history:
             his = self.history[-1]
             step = len(self.history)
@@ -168,6 +203,11 @@ class ChessGame:
         return {}
 
     def king_coordinate(self, color: Color):
+        """
+
+        :param color: the current turn colr
+        :return: the position of the current turn side king
+        """
         for row in range(8):
             for col in range(8):
                 piece = self.board[row][col]
@@ -176,17 +216,32 @@ class ChessGame:
         raise FileNotFoundError
 
     def switch_turn(self):
+        """
+        After a valid movement, switch the current turn side color
+        :return: void
+        """
         if self.turn == Color.WHITE:
             self.turn = Color.BLACK
         else:
             self.turn = Color.WHITE
 
     def get_turn_notation(self):
+        """
+
+        :return: the current turn side color, "b" expresses Black side, and "w" expresses white side
+        """
         if self.turn == Color.WHITE:
             return "w"
         return "b"
 
     def get_castling_notation(self):
+        """
+
+        :return: A string which expresses which rooks are available for castling. If neither side can castle, this is "-".
+                Otherwise, this has one or more letters: "K" (White can castle king_side), "Q" (White can castle
+                queen_side), "k" (Black can castle king_side), and/or "q" (Black can castle queen_side). A move that
+                temporarily prevents castling does not negate this notation.
+        """
         ret = ""
         king_move_w = True
         king_turn_rook_move_w = True
@@ -222,6 +277,29 @@ class ChessGame:
         return ret
 
     def get_fen(self):
+        """
+        A FEN is a standard notation for describing a particular board position of a chess game. The purpose of FEN is
+        to provide all the necessary information to restart a game from a particular position.
+        :return: A string which contains six fields. The separator between fields is a space. The fields are:
+                1. Piece placement (from White's perspective). Each rank is described, starting with rank 8 and ending
+                   with rank 1; within each rank, the contents of each square are described from file "a" through file
+                   "h". Following the Standard Algebraic Notation (SAN), each piece is identified by a single letter
+                   taken from the standard English names (pawn = "P", knight = "N", bishop = "B", rook = "R",
+                   queen = "Q" and king = "K"). White pieces are designated using upper-case letters ("PNBRQK")
+                   while black pieces use lowercase ("pnbrqk"). Empty squares are noted using digits 1 through 8
+                   (the number of empty squares), and "/" separates ranks.
+                2. Active color. "w" means White moves next, "b" means Black moves next.
+                3. Castling availability. If neither side can castle, this is "-". Otherwise, this has one or more
+                   letters: "K" (White can castle kingside), "Q" (White can castle queenside), "k" (Black can castle
+                   kingside), and/or "q" (Black can castle queenside). A move that temporarily prevents castling does
+                   not negate this notation.
+                4. En passant target square in algebraic notation. If there's no en passant target square, this is "-".
+                   If a pawn has just made a two-square move, this is the position "behind" the pawn. This is recorded
+                   regardless of whether there is a pawn in position to make an en passant capture.
+                5. Halfmove clock: This is the number of halfmoves since the last capture or pawn advance. The reason
+                   for this field is that the value is used in the fifty-move rule.
+                6. Fullmove number: The number of the full move. It starts at 1, and is incremented after Black's move.
+        """
         ret = ""
         for row in range(7, -1, -1):
             count = 0
@@ -251,6 +329,10 @@ class ChessGame:
         return ret
 
     def is_being_checked(self):
+        """
+
+        :return: A boolean value which expresses the current turn kind is checked or not.
+        """
         king_coord = self.king_coordinate(self.turn)
         for row in range(8):
             for col in range(8):
@@ -261,6 +343,12 @@ class ChessGame:
         return False
 
     def is_being_checked_after_move(self, src: Coordinate, tar: Coordinate) -> bool:
+        """
+
+        :param src: the position of a piece move from
+        :param tar: the position of a piece move to
+        :return: A boolean value which expresses after this piece movement, the current king is still checked or not
+        """
         src_row, src_col = src.get_tuple()
         tar_row, tar_col = tar.get_tuple()
         src_piece = self.board[src_row][src_col]
@@ -272,11 +360,13 @@ class ChessGame:
         self.board[tar_row][tar_col] = tar_piece
         return ret
 
-    # Return int value will indicate the game status.
-    # 1: game continue
-    # 0: draw
-    # -1: loss
     def check_game_status(self):
+        """
+        During the game procedure, check the current game status to judge game ending or continuing.
+        :return: return the current turn game status. "Continue" expresses the game could be continued. "Draw" expresses
+                 draw and game ending, or "WhiteLoss"/"BlackLoss" expresses which color side lose the game and game
+                 ending.
+        """
         if self.half_move_clock == 50:
             return "Draw"
         if not self.is_being_checked():
@@ -301,6 +391,11 @@ class ChessGame:
                 return "BlackLoss"
 
     def get_piece_coordinate(self, piece: PieceInterface) -> Coordinate:
+        """
+
+         :param piece: a piece
+         :return: the position of the piece
+         """
         for row in range(8):
             for col in range(8):
                 if id(piece) == id(self.board[row][col]):
@@ -308,6 +403,10 @@ class ChessGame:
         raise FileNotFoundError
 
     def print_board(self):
+        """
+        Print the game board for the front end using.
+        :return:
+        """
         print()
         for row in range(7, -1, -1):
             print(Fore.LIGHTWHITE_EX + str(row), end=" ")
@@ -327,7 +426,11 @@ class ChessGame:
         print(Style.RESET_ALL)
 
     def load_fen(self, fen_str):
-
+        """
+        Based on the provided fen, recover the game board and game character values.
+        :param fen_str: A fen string which should be under fen standard
+        :return: void
+        """
         index, row, col = 0, 7, 0
         field = fen_str.split()
 
@@ -372,6 +475,11 @@ class ChessGame:
             index += 1
 
     def to_piece(self, char):
+        """
+
+        :param char: A char among (P N B R Q K p n b r q k)
+        :return: Piece interface
+        """
         p = Empty(None, Color.EMPTY)
         if char == "P":
             p = Pawn(self, Color.WHITE)
