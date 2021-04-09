@@ -9,7 +9,7 @@ import os
 
 class Driver:
     def __init__(self):
-        path = r'sqlite:///' + os.getcwd() + r'\game.db'
+        path = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
         engine = create_engine(path, connect_args={'check_same_thread': False})
         meta = MetaData()
 
