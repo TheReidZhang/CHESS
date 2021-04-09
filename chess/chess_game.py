@@ -37,7 +37,7 @@ class ChessGame:
             fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         self.load_fen(fen)
 
-    def init_history(self, history):
+    def init_history(self, history: list):
         """
         :param history:
         :return:
@@ -63,7 +63,7 @@ class ChessGame:
                                  "half_move": half_move_clock,
                                  "full_move": full_move_clock})
 
-    def get_game_history(self):
+    def get_game_history(self) -> list:
         """
 
         :return: return the piece position movement history
@@ -183,7 +183,7 @@ class ChessGame:
         """
         pass
 
-    def get_history(self):
+    def get_history(self) -> {}:
         """
 
         :return: A dictionary record the game status after the last movement which are used by the front end.
@@ -202,7 +202,7 @@ class ChessGame:
                     "full_move": full_move, "step": step}
         return {}
 
-    def king_coordinate(self, color: Color):
+    def king_coordinate(self, color: Color) -> Coordinate:
         """
 
         :param color: the current turn colr
@@ -225,7 +225,7 @@ class ChessGame:
         else:
             self.turn = Color.WHITE
 
-    def get_turn_notation(self):
+    def get_turn_notation(self) -> str:
         """
 
         :return: the current turn side color, "b" expresses Black side, and "w" expresses white side
@@ -234,7 +234,7 @@ class ChessGame:
             return "w"
         return "b"
 
-    def get_castling_notation(self):
+    def get_castling_notation(self) -> str:
         """
 
         :return: A string which expresses which rooks are available for castling. If neither side can castle, this is
@@ -276,7 +276,7 @@ class ChessGame:
             ret = "-"
         return ret
 
-    def get_fen(self):
+    def get_fen(self) -> str:
         """
         A FEN is a standard notation for describing a particular board position of a chess game. The purpose of FEN is
         to provide all the necessary information to restart a game from a particular position.
@@ -328,7 +328,7 @@ class ChessGame:
         ret += str(self.full_move_clock)
         return ret
 
-    def is_being_checked(self):
+    def is_being_checked(self) -> bool:
         """
 
         :return: A boolean value which expresses the current turn kind is checked or not.
@@ -360,7 +360,7 @@ class ChessGame:
         self.board[tar_row][tar_col] = tar_piece
         return ret
 
-    def check_game_status(self):
+    def check_game_status(self) -> str:
         """
         During the game procedure, check the current game status to judge game ending or continuing.
         :return: return the current turn game status. "Continue" expresses the game could be continued. "Draw" expresses
@@ -425,7 +425,7 @@ class ChessGame:
 
         print(Style.RESET_ALL)
 
-    def load_fen(self, fen_str):
+    def load_fen(self, fen_str: str):
         """
         Based on the provided fen, recover the game board and game character values.
         :param fen_str: A fen string which should be under fen standard
@@ -474,7 +474,7 @@ class ChessGame:
                 col += 1
             index += 1
 
-    def to_piece(self, char):
+    def to_piece(self, char: str) -> PieceInterface:
         """
 
         :param char: A char among (P N B R Q K p n b r q k)
