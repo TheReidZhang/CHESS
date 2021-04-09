@@ -6,7 +6,7 @@ import os
 
 class DriverTestCase(unittest.TestCase):
     @staticmethod
-    def remove_db_file():
+    def remove_db_file() -> None:
         path_file = os.path.join(os.getcwd(), 'game.db')
         if os.path.exists(path_file):
             os.remove(path_file)
