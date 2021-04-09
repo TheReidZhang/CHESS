@@ -37,10 +37,11 @@ class ChessGame:
             fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         self.load_fen(fen)
 
-    def init_history(self, history: list):
+    def init_history(self, history: list) -> None:
         """
-        :param history:
-        :return:
+        Initial the game history.
+        :param history: dict
+        :return: None
         """
         for ele in history:
             src = ele["src"]
@@ -62,10 +63,11 @@ class ChessGame:
                                  "en_passant_target_notation": en_passant_target_notation,
                                  "half_move": half_move_clock,
                                  "full_move": full_move_clock})
+        return None
 
     def get_game_history(self) -> list:
         """
-
+        Get game history array list with dictionary elements .
         :return: return the piece position movement history
         """
         ret = []
@@ -75,8 +77,8 @@ class ChessGame:
 
     def get_turn(self) -> str:
         """
-
-        :return: the current turn
+        Get turn side color information.
+        :return: A string which expresses the current turn side.
         """
         if self.turn == Color.WHITE:
             return "White"
@@ -87,7 +89,8 @@ class ChessGame:
         """
         While checkmate, each current turn piece available movements which can release the checkmate.
         :param coordinate: piece position
-        :return: possible movements while checkmate
+        :return: A dictionary with key "moves", and value is a array list which includes the available movements while
+                 checkmate.
         """
         row, col = coordinate.get_tuple()
         piece = self.board[row][col]
@@ -99,7 +102,8 @@ class ChessGame:
 
     def update(self, src: Coordinate, tar: Coordinate, role: str) -> bool:
         """
-
+        Game parameter information will be updated after a valid movement and return True. If the movement is not valid, nothing
+        will be updated, and return False.
         :param src: the position of the piece move from
         :param tar: the position of the piece move to
         :param role: promotion role while the pawn reaches the eighth rank to be replaced by.
@@ -176,17 +180,18 @@ class ChessGame:
             return True
         return False
 
-    def undo(self):
+    def undo(self) -> None:
         """
-        Sprint2 misssion
+        Sprint2 mission
         :return:
         """
         pass
+        return None
 
-    def get_history(self) -> {}:
+    def get_history(self) -> dict:
         """
-
-        :return: A dictionary record the game status after the last movement which are used by the front end.
+        Get the game information after the last step movement.
+        :return: A dictionary
         """
         if self.history:
             his = self.history[-1]
@@ -204,7 +209,7 @@ class ChessGame:
 
     def king_coordinate(self, color: Color) -> Coordinate:
         """
-
+        Get the current turn side king position.
         :param color: the current turn colr
         :return: the position of the current turn side king
         """
@@ -215,20 +220,21 @@ class ChessGame:
                     return Coordinate(row, col)
         raise FileNotFoundError
 
-    def switch_turn(self):
+    def switch_turn(self) -> None:
         """
         After a valid movement, switch the current turn side color
-        :return: void
+        :return:
         """
         if self.turn == Color.WHITE:
             self.turn = Color.BLACK
         else:
             self.turn = Color.WHITE
+        return None
 
     def get_turn_notation(self) -> str:
         """
-
-        :return: the current turn side color, "b" expresses Black side, and "w" expresses white side
+        Get the turn side color notation, "b" expresses Black side, and "w" expresses white side.
+        :return: str
         """
         if self.turn == Color.WHITE:
             return "w"
@@ -236,11 +242,11 @@ class ChessGame:
 
     def get_castling_notation(self) -> str:
         """
-
-        :return: A string which expresses which rooks are available for castling. If neither side can castle, this is
-                "-". Otherwise, this has one or more letters: "K" (White can castle king_side), "Q" (White can castle
-                queen_side), "k" (Black can castle king_side), and/or "q" (Black can castle queen_side). A move that
-                temporarily prevents castling does not negate this notation.
+        A string which expresses which rooks are available for castling. If neither side can castle, this is
+        "-". Otherwise, this has one or more letters: "K" (White can castle king_side), "Q" (White can castle
+        queen_side), "k" (Black can castle king_side), and/or "q" (Black can castle queen_side). A move that
+        temporarily prevents castling does not negate this notation.
+        :return: str
         """
         ret = ""
         king_move_w = True
@@ -330,8 +336,8 @@ class ChessGame:
 
     def is_being_checked(self) -> bool:
         """
-
-        :return: A boolean value which expresses the current turn kind is checked or not.
+        To check the current turn side King is checked or not.
+        :return: bool
         """
         king_coord = self.king_coordinate(self.turn)
         for row in range(8):
@@ -344,10 +350,10 @@ class ChessGame:
 
     def is_being_checked_after_move(self, src: Coordinate, tar: Coordinate) -> bool:
         """
-
+        A boolean value which expresses after this piece movement, the current king is still checked or not
         :param src: the position of a piece move from
         :param tar: the position of a piece move to
-        :return: A boolean value which expresses after this piece movement, the current king is still checked or not
+        :return: bool
         """
         src_row, src_col = src.get_tuple()
         tar_row, tar_col = tar.get_tuple()
@@ -363,9 +369,10 @@ class ChessGame:
     def check_game_status(self) -> str:
         """
         During the game procedure, check the current game status to judge game ending or continuing.
-        :return: return the current turn game status. "Continue" expresses the game could be continued. "Draw" expresses
-                 draw and game ending, or "WhiteLoss"/"BlackLoss" expresses which color side lose the game and game
-                 ending.
+        return the current turn game status. "Continue" expresses the game could be continued. "Draw" expresses
+        draw and game ending, or "WhiteLoss"/"BlackLoss" expresses which color side lose the game and game
+        ending.
+        :return: str
         """
         if self.half_move_clock == 50:
             return "Draw"
@@ -392,17 +399,16 @@ class ChessGame:
 
     def get_piece_coordinate(self, piece: PieceInterface) -> Coordinate:
         """
-
-         :param piece: a piece
-         :return: the position of the piece
-         """
+        Print the game board for the front end using.
+        :return:
+        """
         for row in range(8):
             for col in range(8):
                 if id(piece) == id(self.board[row][col]):
                     return Coordinate(row, col)
         raise FileNotFoundError
 
-    def print_board(self):
+    def print_board(self) -> None:
         """
         Print the game board for the front end using.
         :return:
@@ -424,8 +430,9 @@ class ChessGame:
         print()
 
         print(Style.RESET_ALL)
+        return None
 
-    def load_fen(self, fen_str: str):
+    def load_fen(self, fen_str: str) -> None:
         """
         Based on the provided fen, recover the game board and game character values.
         :param fen_str: A fen string which should be under fen standard
@@ -473,10 +480,11 @@ class ChessGame:
                 self.board[row][col] = piece
                 col += 1
             index += 1
+        return None
 
     def to_piece(self, char: str) -> PieceInterface:
         """
-
+        Get the piece from the given char.
         :param char: A char among (P N B R Q K p n b r q k)
         :return: Piece interface
         """
