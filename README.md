@@ -51,4 +51,27 @@ One of the following pop-up windows will appear on the top of the gameboard when
 3. WhiteLoss: When the white side lose, i.e., is being checked but there are no more valid moves (to resolve the state of being checked) can be made. 
 4. BlackLoss: When the black side lose.
 
+# Work Distribution
+Zijian Zhang: 17%
+1. Flask and react interact, implement highlighting history moves and learn how to create a game menu
+2. The chessboard.jsx works in react and learned how to fetch data. Managed to show the valid moves and high light them in the UI.
 
+Zhenghang Hu: 17%
+1. Helped design the structure of backend including pieces and chess game; implemented and reviewed some functions in chessgame.py
+2. Designed and implemented a simple chess AI
+
+Ying Liu: 17%
+1. Chess game back-end board and game implementation
+2. Chess game back-end game implementation testing
+
+Xiao Yang: 17%
+1.  Implementation of all chess pieces.
+2. implementation of testing functions of chess pieces.
+
+Cicong Tian: 16%
+1. User Documents
+2. Helped test the computer AI
+
+Yiting Wang: 16%
+1. Make databases to store all chess elements
+2. Drive and driver testing
