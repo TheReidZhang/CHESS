@@ -1,6 +1,5 @@
 import unittest
 from api.app import create_app
-from flask import request
 import os
 
 
@@ -67,5 +66,3 @@ class TestApp(unittest.TestCase):
         response = client.get(url).get_json()
         self.assertEqual(len(response), 1)
         self.assertEqual(response["moves"], ["f3", "f4"])
-
-
