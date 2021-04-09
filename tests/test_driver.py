@@ -25,10 +25,11 @@ class DriverTestCase(unittest.TestCase):
     def test_create_game(self):
         DriverTestCase.remove_db_file()
         driver = Driver()
-        conn = driver.conn
+        conn = driver.engine.connect()
         session = driver.create_game()["session_id"]
         cursor = conn.execute(driver.current_game.select().where(driver.current_game.c.session_id == session))
         session_from_sql = cursor.fetchall()[0][0]
+        conn.close()
         self.assertEqual(session, session_from_sql)
 
     def test_resume_game(self):
@@ -61,11 +62,12 @@ class DriverTestCase(unittest.TestCase):
     def test_update_game(self):
         DriverTestCase.remove_db_file()
         driver = Driver()
+        conn = driver.engine.connect()
         src = Coordinate(1, 0)
         tar = Coordinate(3, 0)
         session_id = driver.create_game()["session_id"]
         driver.update_game({"session_id": session_id, "src": src.encode(), "tar": tar.encode(), "role": "Pawn"})
-        conn = driver.conn
         ret = conn.execute(driver.history.select().where(driver.history.c.session_id == session_id))
         updated_src = ret.fetchall()[0][2]
+        conn.close()
         self.assertEqual("(1,0)", updated_src)

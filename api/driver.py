@@ -216,8 +216,8 @@ class Driver:
         status = game.check_game_status()
         conn = self.engine.connect()
         conn.execute(self.current_game.update().where(self.current_game.c.session_id == session_id),
-                      {"session_id": session_id,
-                       "status": status,
-                       "fen": fen,
-                       "last_update": time})
+                     {"session_id": session_id,
+                      "status": status,
+                      "fen": fen,
+                      "last_update": time})
         conn.close()
