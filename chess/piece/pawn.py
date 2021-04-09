@@ -3,7 +3,7 @@ from chess.piece.coordinate import Coordinate
 
 
 class Pawn(PieceInterface):
-    def en_passant(self, attack_col: int, row: int, col: int):
+    def en_passant(self, attack_col: int, row: int, col: int) -> bool:
         """
         Check if en passant is available for the capturing pawn at Coordinate(row, col)
         and the captured pawn at Coordinate(row, attack_col)
