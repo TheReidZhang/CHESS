@@ -27,4 +27,4 @@ before_script:
 
 test:
   script:
-    - PYTHONPATH=./backend pytest --cov=backend/api --cov=backend/app.py backend/tests/
+    - PYTHONPATH=./backend pytest --cov=backend/api --cov=app backend/tests/

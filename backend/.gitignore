@@ -7,3 +7,5 @@
 /tests/game.db
 /game.db
 /venv
+/__pycache__
+/tests/__pycache__
