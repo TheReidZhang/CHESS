@@ -21,10 +21,10 @@ cache:
 before_script:
   - python -V  # Print out python version for debugging
   - pip install virtualenv pytest-cov
-  - pip install -r requirements.txt
+  - pip install -r backend/requirements.txt
   - virtualenv venv
   - source venv/bin/activate
 
 test:
   script:
-    - PYTHONPATH=. pytest --cov=chess --cov=api tests/
+    - PYTHONPATH=./backend pytest --cov=api tests/
