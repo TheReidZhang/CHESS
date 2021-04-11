@@ -16,15 +16,15 @@ variables:
 cache:
   paths:
     - .cache/pip
-    - venv/
+    - backend/venv/
 
 before_script:
   - python -V  # Print out python version for debugging
   - pip install virtualenv pytest-cov
   - pip install -r backend/requirements.txt
-  - virtualenv venv
-  - source venv/bin/activate
+  - virtualenv backend/venv
+  - source backend/venv/bin/activate
 
 test:
   script:
-    - PYTHONPATH=./backend pytest --cov=backend/api backend/tests/
+    - PYTHONPATH=./backend pytest --cov=backend/api --cov=backend/app.py backend/tests/
