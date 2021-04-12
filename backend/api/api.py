@@ -4,18 +4,18 @@ from api.simple_ai import SimpleAI
 import random
 import datetime
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Boolean
-import os
 
 
 class ChessAPI:
-    def __init__(self):
+    def __init__(self, db_url="init"):
         """
         Set up database using SQLite and put the db file under the same directory if db file does not exit.
         Connect to the database, fetch data and create dict sessions where key is session_id and value is
         chess game instance.
         """
-        path = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
-        self.engine = create_engine(path, connect_args={'check_same_thread': False})
+        if db_url == "init":
+            db_url = 'postgresql+psycopg2://postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432'
+        self.engine = create_engine(db_url)
         meta = MetaData()
 
         self.current_game = Table(

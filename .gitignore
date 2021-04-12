@@ -1,3 +1,4 @@
 /.pytest_cache
 game.db
 .coverage
+.idea
