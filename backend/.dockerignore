@@ -4,3 +4,4 @@
 /tests
 /game.db
 /venv
+/__pycache__

@@ -2,9 +2,9 @@ from flask import Flask, request, json
 from api.api import ChessAPI
 
 
-def create_app():
+def create_app(db_url="init"):
     app = Flask(__name__)
-    driver = ChessAPI()
+    driver = ChessAPI(db_url)
 
     @app.route('/chess/info', methods=['POST'])
     def fen():
