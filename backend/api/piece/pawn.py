@@ -16,11 +16,14 @@ class Pawn(PieceInterface):
         """
         if len(self.game.history) == 0:
             return False
-        last_move = self.game.history[-1]
-        src_row = last_move["src"].get_tuple()[0]
-        tar_row, tar_col = last_move["tar"].get_tuple()
-        if type(last_move["src_piece"]) == Pawn and abs(src_row - tar_row) == 2 and row == tar_row and \
-                abs(col - tar_col) == 1 and tar_col == attack_col:
+        last_fen = self.game.history[-1]
+        field = last_fen.split()
+        en_passant_target_notation = field[3]
+        if en_passant_target_notation == "-":
+            return False
+        tar_row = int(en_passant_target_notation[-1])-2
+        tar_col = ord(en_passant_target_notation[0]) - ord("a")
+        if row == tar_row and abs(col - tar_col) == 1 and tar_col == attack_col:
             return True
         return False
 
