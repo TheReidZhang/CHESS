@@ -38,6 +38,35 @@ class TestInitial(unittest.TestCase):
             self.game.board[row][4] = King(self.game, color)
 
 
+class TestInitHistory(unittest.TestCase):
+    def setUp(self) -> None:
+        self.game = ChessGame(fen="start")
+
+    def test_init_history_restores_expected_history(self):
+        history = [{"fen": "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1",
+                    "movement": {"src": "a7", "tar": "a5"}},
+                   {"fen": "rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2",
+                    "movement": {"src": "a7", "tar": "a5"}},
+                   {"fen": "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPPP/1NBQKBNR w Kk a6 2 3",
+                    "movement": {"src": "a7", "tar": "a5"}},
+                   {"fen": "1nbqkbnr/1ppppppp/r7/p7/P6P/R7/1PPPPPP1/1NBQKBNR b Kk h3 0 3",
+                    "movement": {"src": "h2", "tar": "h4"}}]
+        self.game.init_history(history)
+        self.assertEqual(self.game.history[0], {"fen": "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1",
+                                                "movement": {"src": "a7", "tar": "a5"}})
+        self.assertEqual(self.game.history[1], {"fen": "rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2",
+                                                "movement": {"src": "a7", "tar": "a5"}})
+        self.assertEqual(self.game.history[2], {"fen": "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPPP/1NBQKBNR w Kk a6 2 3",
+                                                "movement": {"src": "a7", "tar": "a5"}})
+        self.assertEqual(self.game.history[3], {"fen": "1nbqkbnr/1ppppppp/r7/p7/P6P/R7/1PPPPPP1/1NBQKBNR b Kk h3 0 3",
+                                                "movement": {"src": "h2", "tar": "h4"}})
+
+        history.append({"fen": "1nbqkbnr/1pppppp1/r7/p6p/P6P/R7/1PPPPPP1/1NBQKBNR w Kk h6 0 4",
+                        "movement": {"src": "h7", "tar": "h5"}})
+        self.assertEqual(len(history), 5)
+        self.assertEqual(len(self.game.history), 4)
+
+
 class TestGetTurn(unittest.TestCase):
     def setUp(self) -> None:
         self.game = ChessGame(fen="start")
@@ -152,15 +181,29 @@ class TestUpDate(unittest.TestCase):
 
     def test_update_history(self):
         self.game.update(Coordinate(1, 0), Coordinate(3, 0), "Queen")
-        self.assertEqual(self.game.history[0]["src"], Coordinate(1, 0))
-        self.assertEqual(self.game.history[0]["tar"], Coordinate(3, 0))
-        self.assertEqual(type(self.game.history[0]["src_piece"]), Pawn)
-        self.assertEqual(type(self.game.history[0]["tar_piece"]), Empty)
-        self.assertEqual(self.game.history[0]["castling"], False)
-        self.assertEqual(self.game.history[0]["en_passant"], False)
-        self.assertEqual(self.game.history[0]["en_passant_target_notation"], "a3")
-        self.assertEqual(self.game.history[0]["half_move"], 0)
-        self.assertEqual(self.game.history[0]["full_move"], 1)
+        self.game.update(Coordinate(6, 0), Coordinate(4, 0), "Queen")
+        self.game.update(Coordinate(0, 0), Coordinate(2, 0), "Queen")
+        self.game.update(Coordinate(7, 0), Coordinate(5, 0), "Queen")
+        self.game.update(Coordinate(1, 7), Coordinate(3, 7), "Queen")
+        self.game.update(Coordinate(6, 7), Coordinate(4, 7), "Queen")
+
+        self.assertEqual(self.game.history[0]["fen"], "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1")
+        self.assertEqual(self.game.history[0]["movement"], {"src": "a2", "tar": "a4"})
+
+        self.assertEqual(self.game.history[1]["fen"], "rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2")
+        self.assertEqual(self.game.history[1]["movement"], {"src": "a7", "tar": "a5"})
+
+        self.assertEqual(self.game.history[2]["fen"], "rnbqkbnr/1ppppppp/8/p7/P7/R7/1PPPPPPP/1NBQKBNR b Kkq a6 1 2")
+        self.assertEqual(self.game.history[2]["movement"], {"src": "a1", "tar": "a3"})
+
+        self.assertEqual(self.game.history[3]["fen"], "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPPP/1NBQKBNR w Kk a6 2 3")
+        self.assertEqual(self.game.history[3]["movement"], {"src": "a8", "tar": "a6"})
+
+        self.assertEqual(self.game.history[4]["fen"], "1nbqkbnr/1ppppppp/r7/p7/P6P/R7/1PPPPPP1/1NBQKBNR b Kk h3 0 3")
+        self.assertEqual(self.game.history[4]["movement"], {"src": "h2", "tar": "h4"})
+
+        self.assertEqual(self.game.history[5]["fen"], "1nbqkbnr/1pppppp1/r7/p6p/P6P/R7/1PPPPPP1/1NBQKBNR w Kk h6 0 4")
+        self.assertEqual(self.game.history[5]["movement"], {"src": "h7", "tar": "h5"})
 
 
 class TestGetHistory(unittest.TestCase):
@@ -171,33 +214,16 @@ class TestGetHistory(unittest.TestCase):
         self.assertEqual(self.game.get_history(), {})
 
     def test_get_history_during_game(self):
-        self.game.history = [{"src": Coordinate(1, 0), "tar": Coordinate(2, 0),
-                              "src_piece": Pawn(self.game, Color.WHITE),
-                              "tar_piece": Empty(None, Color.EMPTY),
-                              "castling": False, "en_passant": False,
-                              "en_passant_target_notation": "-",
-                              "half_move": 0, "full_move": 1}]
-        expect = {"src": "(1,0)", "tar": "(2,0)", "castling": False,
-                  "en_passant": False, "en_passant_target_notation": "-",
-                  "half_move": 0, "full_move": 1, "step": 1}
-        self.assertEqual(self.game.get_history(), expect)
-
-        self.game.history = [{"src": Coordinate(1, 0), "tar": Coordinate(2, 0),
-                              "src_piece": Pawn(self.game, Color.WHITE),
-                              "tar_piece": Empty(None, Color.EMPTY),
-                              "castling": False, "en_passant": False,
-                              "en_passant_target_notation": "-",
-                              "half_move": 0, "full_move": 1},
-                             {"src": Coordinate(6, 0), "tar": Coordinate(4, 0),
-                              "src_piece": Pawn(self.game, Color.BLACK),
-                              "tar_piece": Empty(None, Color.EMPTY),
-                              "castling": False, "en_passant": False,
-                              "en_passant_target_notation": "a6",
-                              "half_move": 0, "full_move": 1}]
-        expect = {"src": "(6,0)", "tar": "(4,0)",
-                  "castling": False,
-                  "en_passant": False, "en_passant_target_notation": "a6",
-                  "half_move": 0, "full_move": 1, "step": 2}
+        self.game.history = [{"fen": "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1",
+                             "movement": {"src": "a7", "tar": "a5"}},
+                             {"fen": "rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2",
+                              "movement": {"src": "a7", "tar": "a5"}},
+                             {"fen": "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPPP/1NBQKBNR w Kk a6 2 3",
+                              "movement": {"src": "a7", "tar": "a5"}},
+                             {"fen": "1nbqkbnr/1ppppppp/r7/p7/P6P/R7/1PPPPPP1/1NBQKBNR b Kk h3 0 3",
+                              "movement": {"src": "h2", "tar": "h4"}}]
+        expect = {"src": "h2", "tar": "h4", "fen": "1nbqkbnr/1ppppppp/r7/p7/P6P/R7/1PPPPPP1/1NBQKBNR b Kk h3 0 3",
+                  "step": 4}
         self.assertEqual(self.game.get_history(), expect)
 
 
@@ -261,51 +287,24 @@ class TestGetCastlingNotation(unittest.TestCase):
         self.assertEqual(self.game.get_castling_notation(), "KQkq")
 
     def test_get_castling_notation_during_game(self):
-        self.game.history = [{"src": Coordinate(0, 0)}]
+        self.game.board[0][4].firstMove = True
+        self.game.board[7][4].firstMove = True
+        self.game.board[0][0].firstMove = True
+        self.game.board[0][7].firstMove = True
+        self.game.board[7][0].firstMove = True
+        self.game.board[7][7].firstMove = True
+        self.assertEqual(self.game.get_castling_notation(), "KQkq")
+
+        self.game.board[0][0].firstMove = False
         self.assertEqual(self.game.get_castling_notation(), "Kkq")
 
-        self.game.history = [{"src": Coordinate(0, 7)}]
-        self.assertEqual(self.game.get_castling_notation(), "Qkq")
-
-        self.game.history = [{"src": Coordinate(0, 0)}, {"src": Coordinate(0, 7)}]
+        self.game.board[0][7].firstMove = False
         self.assertEqual(self.game.get_castling_notation(), "kq")
 
-        self.game.history = [{"src": Coordinate(0, 4)}]
-        self.assertEqual(self.game.get_castling_notation(), "kq")
-
-        self.game.history = [{"src": Coordinate(7, 4)}]
-        self.assertEqual(self.game.get_castling_notation(), "KQ")
-
-        self.game.history = [{"src": Coordinate(7, 0)}]
-        self.assertEqual(self.game.get_castling_notation(), "KQk")
-
-        self.game.history = [{"src": Coordinate(7, 7)}]
-        self.assertEqual(self.game.get_castling_notation(), "KQq")
-
-        self.game.history = [{"src": Coordinate(7, 0)}, {"src": Coordinate(7, 7)}]
-        self.assertEqual(self.game.get_castling_notation(), "KQ")
-
-        self.game.history = [{"src": Coordinate(0, 7)},
-                             {"src": Coordinate(7, 0)}, {"src": Coordinate(7, 7)}]
-        self.assertEqual(self.game.get_castling_notation(), "Q")
-
-        self.game.history = [{"src": Coordinate(0, 0)},
-                             {"src": Coordinate(7, 0)}, {"src": Coordinate(7, 7)}]
-        self.assertEqual(self.game.get_castling_notation(), "K")
-
-        self.game.history = [{"src": Coordinate(0, 0)}, {"src": Coordinate(0, 7)},
-                             {"src": Coordinate(7, 7)}]
-        self.assertEqual(self.game.get_castling_notation(), "q")
-
-        self.game.history = [{"src": Coordinate(0, 0)}, {"src": Coordinate(0, 7)},
-                             {"src": Coordinate(7, 0)}]
+        self.game.board[7][0].firstMove = False
         self.assertEqual(self.game.get_castling_notation(), "k")
 
-        self.game.history = [{"src": Coordinate(0, 0)}, {"src": Coordinate(0, 7)},
-                             {"src": Coordinate(7, 0)}, {"src": Coordinate(7, 7)}]
-        self.assertEqual(self.game.get_castling_notation(), "-")
-
-        self.game.history = [{"src": Coordinate(0, 4)}, {"src": Coordinate(7, 4)}]
+        self.game.board[7][7].firstMove = False
         self.assertEqual(self.game.get_castling_notation(), "-")
 
 
@@ -316,38 +315,6 @@ class TestGetFen(unittest.TestCase):
     def test_get_fen_start(self):
         self.assertEqual(self.game.get_fen(),
                          "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-
-    def test_get_fen_in_few_moves(self):
-        self.game.update(Coordinate(1, 4), Coordinate(3, 4), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
-        self.game.update(Coordinate(6, 2), Coordinate(4, 2), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2")
-        self.game.update(Coordinate(0, 6), Coordinate(2, 5), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
-        self.game.update(Coordinate(6, 0), Coordinate(4, 0), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "rnbqkbnr/1p1ppppp/8/p1p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq a6 0 3")
-        self.game.update(Coordinate(0, 7), Coordinate(0, 6), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "rnbqkbnr/1p1ppppp/8/p1p5/4P3/5N2/PPPP1PPP/RNBQKBR1 b Qkq - 1 3")
-        self.game.update(Coordinate(7, 0), Coordinate(6, 0), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "1nbqkbnr/rp1ppppp/8/p1p5/4P3/5N2/PPPP1PPP/RNBQKBR1 w Qk - 2 4")
-        self.game.update(Coordinate(1, 0), Coordinate(3, 0), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "1nbqkbnr/rp1ppppp/8/p1p5/P3P3/5N2/1PPP1PPP/RNBQKBR1 b Qk a3 0 4")
-        self.game.update(Coordinate(6, 7), Coordinate(4, 7), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "1nbqkbnr/rp1pppp1/8/p1p4p/P3P3/5N2/1PPP1PPP/RNBQKBR1 w Qk h6 0 5")
-        self.game.update(Coordinate(0, 0), Coordinate(1, 0), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "1nbqkbnr/rp1pppp1/8/p1p4p/P3P3/5N2/RPPP1PPP/1NBQKBR1 b k - 1 5")
-        self.game.update(Coordinate(7, 7), Coordinate(6, 7), "Queen")
-        self.assertEqual(self.game.get_fen(),
-                         "1nbqkbn1/rp1ppppr/8/p1p4p/P3P3/5N2/RPPP1PPP/1NBQKBR1 w - - 2 6")
 
     def test_get_fen_during_game(self):
         for row in range(8):
@@ -612,20 +579,3 @@ class TestChessGame(unittest.TestCase):
         self.assertEqual(game.half_move_clock, 20)
         self.assertEqual(game.full_move_clock, 14)
         self.assertEqual(game.count, 26)
-
-    def test_init_history_restores_expected_history(self):
-        game = ChessGame()
-        game.init_history([{"session_id": 15067, "src": '(1,3)', "tar": '(3,3)', "castling": False, "en_passant": False,
-                            "en_passant_target_notation": 'd3', "half_move": 0, "full_move": 1},
-                           {"session_id": 15067, "src": '(4,4)', "tar": '(5,2)', "castling": False, "en_passant": False,
-                            "en_passant_target_notation": '-', "half_move": 50, "full_move": 31}])
-        self.assertEqual(len(game.history), 2)
-        self.assertEqual(game.history[-1]["src"], Coordinate(4, 4))
-        self.assertEqual(game.history[-1]["tar"], Coordinate(5, 2))
-
-        game.init_history([{"session_id": 32489, "src": '(2,2)', "tar": '(3,3)', "castling": False, "en_passant": False,
-                            "en_passant_target_notation": 'd3', "half_move": 0, "full_move": 1},
-                           {"session_id": 32489, "src": '(3,7)', "tar": '(1,4)', "castling": False, "en_passant": False,
-                            "en_passant_target_notation": '-', "half_move": 50, "full_move": 31}])
-        self.assertEqual(game.history[-1]["src"], Coordinate(3, 7))
-        self.assertEqual(game.history[-1]["tar"], Coordinate(1, 4))
