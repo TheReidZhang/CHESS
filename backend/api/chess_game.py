@@ -8,9 +8,10 @@ from api.piece.queen import Queen
 from api.piece.rook import Rook
 from api.piece.piece_interface import Color, PieceInterface
 from colorama import Fore, Style
-import re
+import copy
 
 
+# noinspection PyTypeChecker
 class ChessGame:
     def __init__(self, fen="start"):
         """
@@ -19,8 +20,11 @@ class ChessGame:
         """
         self.board = []
         self.empty_cell = Empty(None, Color.EMPTY)
+        # added
+        self.movement = []
+        self.fen = []
+
         self.history = []
-        # add
         self.count = 1
         self.half_move_clock = 0
         self.full_move_clock = 1
@@ -43,26 +47,7 @@ class ChessGame:
         :param history: dict
         :return: None
         """
-        for ele in history:
-            src = ele["src"]
-            row, col = tuple(map(int, re.findall(r'[0-9]+', src)))
-            src = Coordinate(row, col)
-            tar = ele["tar"]
-            row, col = tuple(map(int, re.findall(r'[0-9]+', tar)))
-            tar = Coordinate(row, col)
-            # no use rn
-            src_piece = self.empty_cell
-            tar_piece = self.empty_cell
-            castling = ele["castling"]
-            en_passant = ele["en_passant"]
-            en_passant_target_notation = ele["en_passant_target_notation"]
-            half_move_clock = ele["half_move"]
-            full_move_clock = ele["full_move"]
-            self.history.append({"src": src, "tar": tar, "src_piece": src_piece,
-                                 "tar_piece": tar_piece, "castling": castling, "en_passant": en_passant,
-                                 "en_passant_target_notation": en_passant_target_notation,
-                                 "half_move": half_move_clock,
-                                 "full_move": full_move_clock})
+        self.history = copy.deepcopy(history)
         return None
 
     def get_game_history(self) -> list:
@@ -71,8 +56,9 @@ class ChessGame:
         :return: return the piece position movement history
         """
         ret = []
-        for ele in self.history:
-            ret.append({"src": Coordinate.encode(ele["src"]), "tar": Coordinate.encode(ele["tar"])})
+        if (len(self.history)) > 0:
+            for index in range(len(self.history)):
+                ret.append(self.history[index]["movement"])
         return ret
 
     def get_turn(self) -> str:
@@ -116,9 +102,13 @@ class ChessGame:
                 tar in src_piece.get_checked_moves()["moves"]:
             tar_row, tar_col = tar.get_tuple()
             tar_piece = self.board[tar_row][tar_col]
-            castling = False
-            en_passant = False
-            self.en_passant_target_notation = "-"
+            if type(src_piece) == King:
+                src_piece.firstMove = False
+            if type(src_piece) == Rook:
+                src_piece.firstMove = False
+            # castling = False
+            # en_passant = False
+            # self.en_passant_target_notation = "-"
             if type(src_piece) in [King, Rook]:
                 src_piece.firstMove = False
             # add trace for en_passant target square notation
@@ -131,7 +121,7 @@ class ChessGame:
                         self.en_passant_target_notation = Coordinate(tar_row + 1, tar_col).encode()
             # update the En passant
             if type(src_piece) == King and abs(src_col - tar_col) == 2:
-                castling = True
+                # castling = True
                 if tar_col > src_col:
                     rook = self.board[src_row][7]
                     self.board[tar_row][tar_col - 1] = rook
@@ -141,7 +131,7 @@ class ChessGame:
                     self.board[tar_row][tar_col + 1] = rook
                     self.board[src_row][0] = self.empty_cell
             elif type(src_piece) == Pawn and src_col != tar_col and tar_piece == self.empty_cell:
-                en_passant = True
+                # en_passant = True
                 last_pawn_row, last_pawn_col = self.history[-1]["tar"].get_tuple()
                 self.board[last_pawn_row][last_pawn_col] = self.empty_cell
             # update the movement counts
@@ -152,12 +142,6 @@ class ChessGame:
             self.half_move_clock += 1
             if type(src_piece) == Pawn or type(tar_piece) != Empty:
                 self.half_move_clock = 0
-            # update the game history
-            self.history.append({"src": src, "tar": tar, "src_piece": src_piece,
-                                 "tar_piece": tar_piece, "castling": castling, "en_passant": en_passant,
-                                 "en_passant_target_notation": self.en_passant_target_notation,
-                                 "half_move": self.half_move_clock,
-                                 "full_move": self.full_move_clock})
 
             if type(self.board[src_row][src_col]) == Pawn and tar_row in [0, 7]:
                 color = self.board[src_row][src_col].get_color()
@@ -177,15 +161,22 @@ class ChessGame:
                 self.board[tar_row][tar_col] = src_piece
                 self.board[src_row][src_col] = self.empty_cell
                 self.switch_turn()
+
+            self.movement = {"src": Coordinate.encode(src), "tar": Coordinate.encode(tar)}
+            self.fen = self.get_fen()
+            self.history.append({"fen": self.fen, "movement": self.movement})
             return True
         return False
 
     def undo(self) -> None:
         """
-        Sprint2 mission
+        Undo to the last step.
         :return: None
         """
-        pass
+        if self.history > 0:
+            del self.history[-1]
+        self.load_fen(self.history[-1]["fen"])
+        return None
 
     def get_history(self) -> dict:
         """
@@ -195,15 +186,10 @@ class ChessGame:
         if self.history:
             his = self.history[-1]
             step = len(self.history)
-            src = str(his["src"])
-            tar = str(his["tar"])
-            half_move = his["half_move"]
-            full_move = his["full_move"]
-            en_passant_target_notation = his["en_passant_target_notation"]
-            return {"src": src, "tar": tar, "castling": his["castling"], "en_passant": his["en_passant"],
-                    "en_passant_target_notation": en_passant_target_notation,
-                    "half_move": half_move,
-                    "full_move": full_move, "step": step}
+            fen = his["fen"]
+            src = his["movement"]["src"]
+            tar = his["movement"]["tar"]
+            return {"src": src, "tar": tar, "fen": fen, "step": step}
         return {}
 
     def king_coordinate(self, color: Color) -> Coordinate:
@@ -248,34 +234,32 @@ class ChessGame:
         :return: str
         """
         ret = ""
-        king_move_w = True
-        king_turn_rook_move_w = True
-        queen_turn_rook_move_w = True
-        king_move_b = True
-        king_turn_rook_move_b = True
-        queen_turn_rook_move_b = True
-        if len(self.history) == 0:
-            return "KQkq"
-        for index in range(len(self.history)):
-            if self.history[index]["src"].get_tuple() == (0, 4):
-                king_move_w = False
-            if self.history[index]["src"].get_tuple() == (0, 7):
-                king_turn_rook_move_w = False
-            if self.history[index]["src"].get_tuple() == (0, 0):
-                queen_turn_rook_move_w = False
-            if self.history[index]["src"].get_tuple() == (7, 4):
-                king_move_b = False
-            if self.history[index]["src"].get_tuple() == (7, 7):
-                king_turn_rook_move_b = False
-            if self.history[index]["src"].get_tuple() == (7, 0):
-                queen_turn_rook_move_b = False
-        if king_move_w & king_turn_rook_move_w:
+        king_move_w = False
+        king_side_rook_move_w = False
+        queen_side_rook_move_w = False
+        king_move_b = False
+        king_side_rook_move_b = False
+        queen_side_rook_move_b = False
+        if type(self.board[0][4]) == King:
+            king_move_w = self.board[0][4].firstMove
+        if type(self.board[7][4]) == King:
+            king_move_b = self.board[7][4].firstMove
+        if type(self.board[0][0]) == Rook:
+            queen_side_rook_move_w = self.board[0][0].firstMove
+        if type(self.board[0][7]) == Rook:
+            king_side_rook_move_w = self.board[0][7].firstMove
+        if type(self.board[7][0]) == Rook:
+            queen_side_rook_move_b = self.board[7][0].firstMove
+        if type(self.board[7][7]) == Rook:
+            king_side_rook_move_b = self.board[7][7].firstMove
+
+        if king_move_w & king_side_rook_move_w:
             ret += "K"
-        if king_move_w & queen_turn_rook_move_w:
+        if king_move_w & queen_side_rook_move_w:
             ret += "Q"
-        if king_move_b & king_turn_rook_move_b:
+        if king_move_b & king_side_rook_move_b:
             ret += "k"
-        if king_move_b & queen_turn_rook_move_b:
+        if king_move_b & queen_side_rook_move_b:
             ret += "q"
         if ret == "":
             ret = "-"
