@@ -136,4 +136,3 @@ class TestCastlingFunctions(unittest.TestCase):
         rook = self.chess_game.board[0][7]
         rook.firstMove = False
         self.assertFalse(king.castling(king_side=True))
-
