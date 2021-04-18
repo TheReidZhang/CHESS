@@ -29,7 +29,7 @@ class TestRook(unittest.TestCase):
         self.chess_game.board[2][2] = King(self.chess_game, Color.WHITE)
         actual = self.chess_game.board[0][2].get_checked_moves()
         expected = {'moves': [Coordinate(1, 0)]}
-        self.assertEqual(actual,expected)
+        self.assertEqual(actual, expected)
 
     def test_get_color(self):
         actual_w = self.chess_game.board[0][0].get_color()
