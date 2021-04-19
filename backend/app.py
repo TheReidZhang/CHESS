@@ -1,40 +1,65 @@
-from flask import Flask, request, json
+from flask import Flask, request, json, session
 from api.api import ChessAPI
 
 
 def create_app(db_url="init"):
     app = Flask(__name__)
+    app.secret_key = "TEAM5"
     driver = ChessAPI(db_url)
 
     @app.route('/chess/info', methods=['POST'])
     def fen():
-        request_data = json.loads(request.data)
-        ret = driver.get_info(request_data)
-        return ret
+        if "user" in session:
+            request_data = json.loads(request.data)
+            ret = driver.get_info(request_data, session["user"])
+            return ret
 
     @app.route('/chess/new', methods=['POST'])
     def new():
-        ret = driver.create_game()
-        return ret
+        if "user" in session:
+            ret = driver.create_game(session["user"])
+            return ret
 
     @app.route('/chess/update', methods=['POST'])
     def result():
-        request_data = json.loads(request.data)
-        ret = driver.update_game(request_data)
-        return ret
+        if "user" in session:
+            request_data = json.loads(request.data)
+            ret = driver.update_game(request_data, session["user"])
+            return ret
 
-    @app.route('/chess/<session>/<coordinate>', methods=['GET'])
-    def show(session, coordinate):
-        session_id = int(session)
-        ret = driver.get_checked_moves({"session_id": session_id, "coordinate": coordinate})
-        return ret
+    @app.route('/chess/<session_id>/<coordinate>', methods=['GET'])
+    def show(session_id, coordinate):
+        if "user" in session:
+            session_id = int(session_id)
+            ret = driver.get_checked_moves({"session_id": session_id, "coordinate": coordinate}, session["user"])
+            return ret
 
     @app.route('/resume', methods=['GET'])
     def resume():
-        return driver.resume_game()
+        if "user" in session:
+            return driver.resume_game(session["user"])
+
+    # for user account
+    @app.route('/signup', methods=['POST'])
+    def signup():
+        request_data = json.loads(request.data)
+        ret = driver.sign_up(request_data)
+        return ret
+
+    @app.route('/login', methods=['POST'])
+    def sign_in():
+        request_data = json.loads(request.data)
+        ret = driver.login(request_data)
+        if ret["flag"]:
+            session["user"] = request_data["username"]
+        return ret
+
+    @app.route('/logout', methods=['GET'])
+    def logout():
+        session.pop("user", None)
+        return {"msg": "logged out"}
 
     return app
-
 
 if __name__ == '__main__':
     flask_app = create_app()
