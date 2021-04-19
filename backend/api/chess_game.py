@@ -47,7 +47,7 @@ class ChessGame:
         :param history: dict
         :return: None
         """
-        self.history = copy.deepcopy(history)
+        self.history = history
         return None
 
     def get_game_history(self) -> list:
@@ -132,7 +132,7 @@ class ChessGame:
                     self.board[src_row][0] = self.empty_cell
             elif type(src_piece) == Pawn and src_col != tar_col and tar_piece == self.empty_cell:
                 # en_passant = True
-                last_pawn_row, last_pawn_col = self.history[-1]["tar"].get_tuple()
+                last_pawn_row, last_pawn_col = Coordinate.decode(self.history[-1]["movement"]["tar"]).get_tuple()
                 self.board[last_pawn_row][last_pawn_col] = self.empty_cell
             # update the movement counts
             self.count += 1
@@ -398,21 +398,20 @@ class ChessGame:
         """
         print()
         for row in range(7, -1, -1):
-            print(Fore.LIGHTWHITE_EX + str(row), end=" ")
+            print(str(row), end=" ")
             for col in range(8):
                 if self.board[row][col].get_color() == Color.BLACK:
-                    print(Fore.BLACK + self.board[row][col].to_string(), end=" ")
+                    print(self.board[row][col].to_string(), end=" ")
                 elif self.board[row][col].get_color() == Color.WHITE:
-                    print(Fore.WHITE + self.board[row][col].to_string(), end=" ")
+                    print(self.board[row][col].to_string(), end=" ")
                 else:
-                    print(Fore.BLUE + self.board[row][col].to_string(), end=" ")
+                    print(self.board[row][col].to_string(), end=" ")
             print()
         print(" ", end=" ")
         for col in range(8):
-            print(Fore.LIGHTWHITE_EX + str(col), end=" ")
+            print(str(col), end=" ")
         print()
 
-        print(Style.RESET_ALL)
         return None
 
     def load_fen(self, fen_str: str) -> None:
