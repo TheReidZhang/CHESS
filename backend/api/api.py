@@ -248,4 +248,4 @@ class ChessAPI:
         result = conn.execute(self.users.select().where(self.users.c.username == username))
         conn.close()
         user = result.all()
-        return {"username": user[0]["username"], "total_hours": user[0]["total_hours"]}
+        return {"username": user[0]["username"], "total_hours": user[0]["total_hours"], "valid": True}

@@ -3,6 +3,8 @@ import {useHistory} from 'react-router-dom';
 import Modal from 'react-modal';
 import './menu.css';
 import Button from 'react-bootstrap/Button';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ModalBtn from './ModalBtn';
 
@@ -38,55 +40,41 @@ function Menu() {
     }
     
     return (
-        <div className="div-center">
-            <div className="container">
-                <div className="row mt-2 mb-5 text-center">
-                    <div className="col-12">
-                        Chess Game
-                    </div>
-                </div>
+        <div className="center-container">
+            <Row className="text-center">
+                <Col md={12} xs={12} lg={12} sm={12} className="mb-5">
+                    <Button variant="outline-dark" size="lg" onClick={new_game} className="myBtn">
+                        New Game
+                    </Button>
+                </Col>
 
-                <div className="row mb-4 text-center">
-                    <div className="col-12">
-                        <Button onClick={new_game}>
-                            New Game
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="row mb-4 text-center">
-                    <div className="col-12">
-                        <Button onClick={() => {game_list(); setModalIsOpen(true)}}>
-                            Resume Game
-                        </Button>
-                        <Modal 
-                            isOpen={modalIsOpen} 
-                            onRequestClose={() => setModalIsOpen(false)}
-                            style={
-                                {
-                                    overlay: {
-                                        backgroundColor: 'grey'
-                                    },
-                                    content: {
-                                        backgroundColor: 'orange'
-                                    }
+                <Col md={12} xs={12} lg={12} sm={12} className="mb-5">
+                    <Button variant="outline-dark" size="lg" className="myBtn" onClick={() => {game_list(); setModalIsOpen(true)}}>
+                        Resume Game
+                    </Button>
+                    <Modal 
+                        isOpen={modalIsOpen} 
+                        onRequestClose={() => setModalIsOpen(false)}
+                        style={
+                            {
+                                overlay: {
+                                    backgroundColor: 'grey'
+                                },
+                                content: {
+                                    backgroundColor: 'orange'
                                 }
-                            }>
-                            {resumeList}
-                            
-                           
-                        </Modal>
-                    </div>
-                </div>
-
-                <div className="row mb-4 text-center">
-                    <div className="col-12">
-                        <Button onClick={new_game}>
-                            Replays
-                        </Button>
-                    </div>
-                </div>
-            </div>
+                            }
+                        }>
+                        {resumeList}
+                    </Modal>
+                </Col>
+                
+                <Col md={12} xs={12} lg={12} sm={12} className="mb-5">
+                    <Button variant="outline-dark" className="myBtn" size="lg" onClick={new_game}>
+                        Replays
+                    </Button>
+               </Col>
+            </Row>
         </div>
       );
     
