@@ -3,7 +3,7 @@ from api.piece.coordinate import Coordinate
 from api.simple_ai import SimpleAI
 import random
 import datetime
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Boolean, Float
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_
 
 
 class ChessAPI:
@@ -104,7 +104,8 @@ class ChessAPI:
         start time, and last update
         """
         conn = self.engine.connect()
-        ret = conn.execute(self.current_game.select().where(self.current_game.c.username == username))
+        ret = conn.execute(self.current_game.select().where(self.current_game.c.username == username).
+                           order_by(self.current_game.c.last_update.desc()))
         lst = []
         for ele in ret:
             session_id = ele[1]
@@ -138,6 +139,7 @@ class ChessAPI:
         """
         Update a certain game from source to target, and promotion role if occurred.
         :param request: A dict including session id, source coordinate, target coordinate, and promotion role.
+        :param username:
         :return: A dict including info about update validation, whether being checked, game status and turn color.
         """
 
@@ -176,6 +178,7 @@ class ChessAPI:
         """
         Get all valid moves which won't let you be checked in certain game for a coordinate.
         :param request: A dict including session id and piece coordinate
+        :param username:
         :return: A dict which including all valid moves which won't let you be checked in certain game for a coordinate.
         """
         session_id = request["session_id"]
@@ -196,7 +199,6 @@ class ChessAPI:
         game = self.sessions[session_id][0]
         game_history = game.get_history()
         if game_history:
-            #print(game_history)
             src = game_history["src"]
             tar = game_history["tar"]
             step = game_history["step"]
@@ -237,10 +239,11 @@ class ChessAPI:
 
     def login(self, request: dict) -> dict:
         conn = self.engine.connect()
-        result = conn.execute(self.users.select().where(self.users.c.username == request["username"]
-                                                        and self.users.c.password == request["password"]))
+        result = conn.execute(self.users.select().where(
+            and_(self.users.c.username == request["username"],
+                 self.users.c.password == request["password"]))).all()
         conn.close()
-        if len(result.all()) > 0:
+        if len(result) > 0:
             return {"valid": True}
         return {"valid": False}
 
