@@ -16,19 +16,60 @@ function App() {
   const [showSignup, setShowSignup] = useState(false);
   const handleSignupClose = () => setShowSignup(false);
   const handleSignupShow = () => setShowSignup(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  const renderMenu = () => {
+    if (isLoggedIn) {
+      return <Menu />
+    }
+    else {
+      return (
+      <div>
+        <div style={{textAlign: "left", fontFamily: 'Original Surfer', fontSize:"150%"}}>
+          Every chess master was once a beginner.
+        </div>
+        <div style={{textAlign: "right", fontFamily: 'Original Surfer', fontSize:"150%"}}>
+          – Irving Chernev
+        </div>
 
+        <br/>
+        <br/>
 
+        <div style={{textAlign: "left", fontFamily: 'Original Surfer', fontSize:"150%"}}>
+          I have come to the personal conclusion that while all artists are not chess players, all chess players are artists.
+        </div>
+        <div style={{textAlign: "right", fontFamily: 'Original Surfer', fontSize:"150%"}}>
+          – Marcel Duchamp
+        </div>
+        
+        <br/>
+        <br/>
+        
+        <div style={{textAlign: "left", fontFamily: 'Original Surfer', fontSize:"150%"}}>
+          Avoid the crowd. Do your own thinking independently. Be the chess player, not the chess piece.
+        </div>
+        <div style={{textAlign: "right", fontFamily: 'Original Surfer', fontSize:"150%"}}>
+          – Ralph Charell
+        </div>
+
+        
+      </div>
+      )
+    }
+  }
   
   return (
     <Container fluid style={{ paddingLeft: 0, paddingRight: 0 }}>
       <Router>
-        <Navigation handleLoginShow={handleLoginShow}/>
+        <Navigation handleLoginShow={handleLoginShow} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>
         <Login showLogin={showLogin} handleLoginClose={handleLoginClose} handleSignupShow={handleSignupShow}/>
         <Signup showSignup={showSignup} handleSignupClose={handleSignupClose} />
         <Switch>
           <Route path="/chess/:session_id" exact component={WithMoveValidation} />
           <Route path="/" exact>
-            <Menu />
+            <div className="center-container">
+              {renderMenu()}
+            </div>
           </Route>
         </Switch>
       </Router>
