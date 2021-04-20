@@ -43,8 +43,12 @@ class ChessGame:
         :param history: dict
         :return: None
         """
-        self.history = history
-        return None
+        if history:
+            for ele in history:
+                movement = {"src": ele[2],
+                            "tar": ele[3]}
+                fen = ele[4]
+                self.history.append({"fen": fen, "movement": movement})
 
     def get_game_history(self) -> list:
         """
@@ -52,9 +56,9 @@ class ChessGame:
         :return: return the piece position movement history
         """
         ret = []
-        if (len(self.history)) > 0:
-            for index in range(len(self.history)):
-                ret.append(self.history[index]["movement"])
+        if self.history:
+            for ele in self.history:
+                ret.append(ele["movement"])
         return ret
 
     def get_turn(self) -> str:

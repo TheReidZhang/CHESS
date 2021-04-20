@@ -1,10 +1,10 @@
 import './App.css';
-import Navigation from './page/navbar'
-import Login from './page/login'
-import Signup from './page/signup'
+import Navigation from './menu/Navigation'
+import Login from './menu/Login'
+import Signup from './menu/Signup'
 import React, { useState } from 'react';
 import WithMoveValidation from "./board/WithMoveValidation";
-import Menu from './menu/menu';
+import MainMenu from './menu/MainMenu';
 import Container from 'react-bootstrap/Container'
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 
@@ -20,7 +20,7 @@ function App() {
   
   const renderMenu = () => {
     if (isLoggedIn) {
-      return <Menu />
+      return <MainMenu />
     }
     else {
       return (

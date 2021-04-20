@@ -12,7 +12,7 @@ function ModalBtn(props) {
         <Row className="align-items-center mb-3">
             <Col>
                 <div style={{ display: "flex", justifyContent: "center" }}>
-                    <Button onClick={() => history.push("/chess/" + props.session_id)}>
+                    <Button variant="outline-dark" size="sm" onClick={() => history.push("/chess/" + props.session_id)}>
                         Session ID: {props.session_id}
                         <br/>
                         Start Time: {props.start_time}

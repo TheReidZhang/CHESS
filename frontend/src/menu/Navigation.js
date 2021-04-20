@@ -23,6 +23,7 @@ function Navigation(props) {
     const history = useHistory();
     const logout = async() => {
         await fetch('/logout');
+        history.push("/");
         history.go(0);
     }
 

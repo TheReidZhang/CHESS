@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import {useHistory} from 'react-router-dom';
-import Modal from 'react-modal';
 import './menu.css';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ModalBtn from './ModalBtn';
+import Modal from 'react-bootstrap/Modal'
 
-
-Modal.setAppElement("#root");
-function Menu() {
+function MainMenu() {
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [resumeList, setResumeList] = useState([]);
 
@@ -37,6 +35,7 @@ function Menu() {
             ret.push(<ModalBtn key={lst[i]["session_id"]}  session_id={lst[i]["session_id"]} start_time={lst[i]["start_time"]} last_update={lst[i]["last_update"]}/>);
         }
         setResumeList(ret);
+        setModalIsOpen(true);
     }
     
     return (
@@ -49,23 +48,16 @@ function Menu() {
                 </Col>
 
                 <Col md={12} xs={12} lg={12} sm={12} className="mb-5">
-                    <Button variant="outline-dark" size="lg" className="myBtn" onClick={() => {game_list(); setModalIsOpen(true)}}>
+                    <Button variant="outline-dark" size="lg" className="myBtn" onClick={game_list}>
                         Resume Game
                     </Button>
-                    <Modal 
-                        isOpen={modalIsOpen} 
-                        onRequestClose={() => setModalIsOpen(false)}
-                        style={
-                            {
-                                overlay: {
-                                    backgroundColor: 'grey'
-                                },
-                                content: {
-                                    backgroundColor: 'orange'
-                                }
-                            }
-                        }>
-                        {resumeList}
+                    <Modal show={modalIsOpen} onHide={() => setModalIsOpen(false)}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>RESUME</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body> 
+                            {resumeList}
+                        </Modal.Body>
                     </Modal>
                 </Col>
                 
@@ -80,5 +72,5 @@ function Menu() {
     
   }
 
-export default Menu;
+export default MainMenu;
   
