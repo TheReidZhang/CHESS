@@ -64,7 +64,7 @@ class TestInitHistory(unittest.TestCase):
         history.append({"fen": "1nbqkbnr/1pppppp1/r7/p6p/P6P/R7/1PPPPPP1/1NBQKBNR w Kk h6 0 4",
                         "movement": {"src": "h7", "tar": "h5"}})
         self.assertEqual(len(history), 5)
-        self.assertEqual(len(self.game.history), 4)
+        self.assertEqual(len(self.game.history), 5)
 
 
 class TestGetTurn(unittest.TestCase):
@@ -193,10 +193,10 @@ class TestUpDate(unittest.TestCase):
         self.assertEqual(self.game.history[1]["fen"], "rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2")
         self.assertEqual(self.game.history[1]["movement"], {"src": "a7", "tar": "a5"})
 
-        self.assertEqual(self.game.history[2]["fen"], "rnbqkbnr/1ppppppp/8/p7/P7/R7/1PPPPPPP/1NBQKBNR b Kkq a6 1 2")
+        self.assertEqual(self.game.history[2]["fen"], "rnbqkbnr/1ppppppp/8/p7/P7/R7/1PPPPPPP/1NBQKBNR b Kkq - 1 2")
         self.assertEqual(self.game.history[2]["movement"], {"src": "a1", "tar": "a3"})
 
-        self.assertEqual(self.game.history[3]["fen"], "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPPP/1NBQKBNR w Kk a6 2 3")
+        self.assertEqual(self.game.history[3]["fen"], "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPPP/1NBQKBNR w Kk - 2 3")
         self.assertEqual(self.game.history[3]["movement"], {"src": "a8", "tar": "a6"})
 
         self.assertEqual(self.game.history[4]["fen"], "1nbqkbnr/1ppppppp/r7/p7/P6P/R7/1PPPPPP1/1NBQKBNR b Kk h3 0 3")
@@ -204,6 +204,46 @@ class TestUpDate(unittest.TestCase):
 
         self.assertEqual(self.game.history[5]["fen"], "1nbqkbnr/1pppppp1/r7/p6p/P6P/R7/1PPPPPP1/1NBQKBNR w Kk h6 0 4")
         self.assertEqual(self.game.history[5]["movement"], {"src": "h7", "tar": "h5"})
+
+
+class TestUndo(unittest.TestCase):
+    def setUp(self) -> None:
+        self.game = ChessGame(fen="start")
+
+    def test_undo(self):
+        self.game.history = [{"fen": "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1",
+                             "movement": {"src": "a2", "tar": "a4"}},
+                             {"fen": "rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2",
+                              "movement": {"src": "a7", "tar": "a5"}},
+                             {"fen": "rnbqkbnr/1ppppppp/8/p7/P7/R7/1PPPPPPP/1NBQKBNR b Kkq - 1 2",
+                              "movement": {"src": "a1", "tar": "a3"}},
+                             {"fen": "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPP1/1NBQKBNR w Kk - 2 3",
+                              "movement": {"src": "a8", "tar": "a6"}}]
+        self.game.undo()
+        color = Color.BLACK
+        self.assertEqual(self.game.turn, color)
+        self.assertEqual(self.game.castling_notation, "Kkq")
+        self.assertEqual(self.game.en_passant_target_notation, "-")
+        self.assertEqual(self.game.half_move_clock, 1)
+        self.assertEqual(self.game.full_move_clock, 2)
+        self.assertEqual(self.game.board[0][0], self.game.empty_cell)
+        self.assertEqual(type(self.game.board[0][1]), Knight)
+        self.assertEqual(self.game.board[0][1].color, Color.WHITE)
+        self.assertEqual(type(self.game.board[0][2]), Bishop)
+        self.assertEqual(type(self.game.board[0][3]), Queen)
+        self.assertEqual(type(self.game.board[0][4]), King)
+        self.assertEqual(type(self.game.board[0][5]), Bishop)
+        self.assertEqual(type(self.game.board[0][6]), Knight)
+        self.assertEqual(type(self.game.board[0][7]), Rook)
+        self.assertEqual(type(self.game.board[7][0]), Rook)
+        self.assertEqual(type(self.game.board[7][1]), Knight)
+        self.assertEqual(self.game.board[7][1].color, Color.BLACK)
+        self.assertEqual(type(self.game.board[7][2]), Bishop)
+        self.assertEqual(type(self.game.board[7][3]), Queen)
+        self.assertEqual(type(self.game.board[7][4]), King)
+        self.assertEqual(type(self.game.board[7][5]), Bishop)
+        self.assertEqual(type(self.game.board[7][6]), Knight)
+        self.assertEqual(type(self.game.board[7][7]), Rook)
 
 
 class TestGetHistory(unittest.TestCase):
@@ -215,14 +255,14 @@ class TestGetHistory(unittest.TestCase):
 
     def test_get_history_during_game(self):
         self.game.history = [{"fen": "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1",
-                             "movement": {"src": "a7", "tar": "a5"}},
+                             "movement": {"src": "a2", "tar": "a4"}},
                              {"fen": "rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2",
                               "movement": {"src": "a7", "tar": "a5"}},
-                             {"fen": "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPPP/1NBQKBNR w Kk a6 2 3",
-                              "movement": {"src": "a7", "tar": "a5"}},
-                             {"fen": "1nbqkbnr/1ppppppp/r7/p7/P6P/R7/1PPPPPP1/1NBQKBNR b Kk h3 0 3",
-                              "movement": {"src": "h2", "tar": "h4"}}]
-        expect = {"src": "h2", "tar": "h4", "fen": "1nbqkbnr/1ppppppp/r7/p7/P6P/R7/1PPPPPP1/1NBQKBNR b Kk h3 0 3",
+                             {"fen": "rnbqkbnr/1ppppppp/8/p7/P7/R7/1PPPPPPP/1NBQKBNR b Kkq - 1 2",
+                              "movement": {"src": "a1", "tar": "a3"}},
+                             {"fen": "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPP1/1NBQKBNR w Kk - 2 3",
+                              "movement": {"src": "a8", "tar": "a6"}}]
+        expect = {"src": "a8", "tar": "a6", "fen": "1nbqkbnr/1ppppppp/r7/p7/P7/R7/1PPPPPP1/1NBQKBNR w Kk - 2 3",
                   "step": 4}
         self.assertEqual(self.game.get_history(), expect)
 
@@ -515,35 +555,35 @@ class TestPieceCoordinate(unittest.TestCase):
 class TestChessGame(unittest.TestCase):
     def test_to_piece_returns_correct_piece(self):
         game = ChessGame()
-        p = game.to_piece("r")
-        self.assertEqual(type(p), Rook)
-        p = game.to_piece("R")
-        self.assertEqual(type(p), Rook)
+        piece = game.to_piece("r")
+        self.assertEqual(type(piece), Rook)
+        piece = game.to_piece("R")
+        self.assertEqual(type(piece), Rook)
 
-        p = game.to_piece("P")
-        self.assertEqual(type(p), Pawn)
-        p = game.to_piece("p")
-        self.assertEqual(type(p), Pawn)
+        piece = game.to_piece("P")
+        self.assertEqual(type(piece), Pawn)
+        piece = game.to_piece("p")
+        self.assertEqual(type(piece), Pawn)
 
-        p = game.to_piece("N")
-        self.assertEqual(type(p), Knight)
-        p = game.to_piece("n")
-        self.assertEqual(type(p), Knight)
+        piece = game.to_piece("N")
+        self.assertEqual(type(piece), Knight)
+        piece = game.to_piece("n")
+        self.assertEqual(type(piece), Knight)
 
-        p = game.to_piece("B")
-        self.assertEqual(type(p), Bishop)
-        p = game.to_piece("b")
-        self.assertEqual(type(p), Bishop)
+        piece = game.to_piece("B")
+        self.assertEqual(type(piece), Bishop)
+        piece = game.to_piece("b")
+        self.assertEqual(type(piece), Bishop)
 
-        p = game.to_piece("Q")
-        self.assertEqual(type(p), Queen)
-        p = game.to_piece("q")
-        self.assertEqual(type(p), Queen)
+        piece = game.to_piece("Q")
+        self.assertEqual(type(piece), Queen)
+        piece = game.to_piece("q")
+        self.assertEqual(type(piece), Queen)
 
-        p = game.to_piece("K")
-        self.assertEqual(type(p), King)
-        p = game.to_piece("k")
-        self.assertEqual(type(p), King)
+        piece = game.to_piece("K")
+        self.assertEqual(type(piece), King)
+        piece = game.to_piece("k")
+        self.assertEqual(type(piece), King)
 
     def test_load_fen_gives_correct_board(self):
         game = ChessGame()
