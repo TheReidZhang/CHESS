@@ -7,11 +7,8 @@ from api.piece.king import King
 from api.piece.queen import Queen
 from api.piece.rook import Rook
 from api.piece.piece_interface import Color, PieceInterface
-from colorama import Fore, Style
-import copy
 
 
-# noinspection PyTypeChecker
 class ChessGame:
     def __init__(self, fen="start"):
         """
@@ -19,17 +16,16 @@ class ChessGame:
         :param fen: Fen string notation
         """
         self.board = []
-        self.empty_cell = Empty(None, Color.EMPTY)
-        # added
         self.movement = []
         self.fen = []
-
         self.history = []
         self.count = 1
         self.half_move_clock = 0
         self.full_move_clock = 1
         self.en_passant_target_notation = "-"
-        ##
+        self.castling_notation = "KQkq"
+        self.empty_cell = Empty(None, Color.EMPTY)
+
         for row in range(8):
             row_list = []
             for col in range(8):
@@ -96,92 +92,98 @@ class ChessGame:
         :return: A boolean value which show the movement is valid or not. If the movement is valid, all game parameters
                  are updated, otherwise no change.
         """
+
+        # If the game status is not 'Continue", then return False and nothing updated.
+        if self.check_game_status() != "Continue":
+            return False
+
+        # If not in for the source piece turn, or the target movement position is not in the source piece movement list,
+        # then then return False and nothing updated.
         src_row, src_col = src.get_tuple()
         src_piece = self.board[src_row][src_col]
-        if self.check_game_status() == "Continue" and self.board[src_row][src_col].get_color() == self.turn and \
-                tar in src_piece.get_checked_moves()["moves"]:
-            tar_row, tar_col = tar.get_tuple()
-            tar_piece = self.board[tar_row][tar_col]
+        if self.board[src_row][src_col].get_color() != self.turn:
+            return False
+        if tar not in src_piece.get_checked_moves()["moves"]:
+            return False
 
-            # fix en_passant bug
-            if type(src_piece) == Pawn and src_col != tar_col and tar_piece == self.empty_cell:
-                last_pawn_row, last_pawn_col = Coordinate.decode(self.history[-1]["movement"]["tar"]).get_tuple()
-                self.board[last_pawn_row][last_pawn_col] = self.empty_cell
-            # update en_passant notation
-            self.en_passant_target_notation = '-'
+        tar_row, tar_col = tar.get_tuple()
+        tar_piece = self.board[tar_row][tar_col]
 
-            if type(src_piece) == King:
-                src_piece.firstMove = False
-            if type(src_piece) == Rook:
-                src_piece.firstMove = False
-            # castling = False
-            # en_passant = False
-            # self.en_passant_target_notation = "-"
-            if type(src_piece) in [King, Rook]:
-                src_piece.firstMove = False
-            # add trace for en_passant target square notation
-            if type(src_piece) == Pawn:
-                step = tar_row - src_row
-                if abs(step) == 2 and src_col == tar_col:
-                    if step > 0:
-                        self.en_passant_target_notation = Coordinate(tar_row - 1, tar_col).encode()
-                    else:
-                        self.en_passant_target_notation = Coordinate(tar_row + 1, tar_col).encode()
-            # update the En passant
-            if type(src_piece) == King and abs(src_col - tar_col) == 2:
-                # castling = True
-                if tar_col > src_col:
-                    rook = self.board[src_row][7]
-                    self.board[tar_row][tar_col - 1] = rook
-                    self.board[src_row][7] = self.empty_cell
+        # Implement en_passant
+        if type(src_piece) == Pawn and src_col != tar_col and tar_piece == self.empty_cell:
+            last_pawn_row, last_pawn_col = Coordinate.decode(self.history[-1]["movement"]["tar"]).get_tuple()
+            self.board[last_pawn_row][last_pawn_col] = self.empty_cell
+
+        # Reset en_passant notation
+        self.en_passant_target_notation = '-'
+
+        # Update Rook and King firstMove.
+        if type(src_piece) in [King, Rook]:
+            src_piece.firstMove = False
+
+        # Update castling notation
+        self.castling_notation = self.get_castling_notation()
+
+        # Update en_passant target square notation
+        if type(src_piece) == Pawn:
+            step = tar_row - src_row
+            if abs(step) == 2 and src_col == tar_col:
+                if step > 0:
+                    self.en_passant_target_notation = Coordinate(tar_row - 1, tar_col).encode()
                 else:
-                    rook = self.board[src_row][0]
-                    self.board[tar_row][tar_col + 1] = rook
-                    self.board[src_row][0] = self.empty_cell
-            # elif type(src_piece) == Pawn and src_col != tar_col and tar_piece == self.empty_cell:
-            #     # en_passant = True
-            #     last_pawn_row, last_pawn_col = Coordinate.decode(self.history[-1]["movement"]["tar"]).get_tuple()
-            #     self.board[last_pawn_row][last_pawn_col] = self.empty_cell
-            # update the movement counts
-            self.count += 1
-            if self.count % 2 == 0:
-                self.full_move_clock += 1
+                    self.en_passant_target_notation = Coordinate(tar_row + 1, tar_col).encode()
 
-            self.half_move_clock += 1
-            if type(src_piece) == Pawn or type(tar_piece) != Empty:
-                self.half_move_clock = 0
-
-            if type(self.board[src_row][src_col]) == Pawn and tar_row in [0, 7]:
-                color = self.board[src_row][src_col].get_color()
-                if role == "Rook":
-                    piece = Rook(self, color)
-                    piece.firstMove = False
-                elif role == "Knight":
-                    piece = Knight(self, color)
-                elif role == "Queen":
-                    piece = Queen(self, color)
-                else:
-                    piece = Bishop(self, color)
-                self.board[src_row][src_col] = self.empty_cell
-                self.board[tar_row][tar_col] = piece
-                self.switch_turn()
+        # Update the En passant
+        if type(src_piece) == King and abs(src_col - tar_col) == 2:
+            if tar_col > src_col:
+                rook = self.board[src_row][7]
+                self.board[tar_row][tar_col - 1] = rook
+                self.board[src_row][7] = self.empty_cell
             else:
-                self.board[tar_row][tar_col] = src_piece
-                self.board[src_row][src_col] = self.empty_cell
-                self.switch_turn()
+                rook = self.board[src_row][0]
+                self.board[tar_row][tar_col + 1] = rook
+                self.board[src_row][0] = self.empty_cell
 
-            self.movement = {"src": Coordinate.encode(src), "tar": Coordinate.encode(tar)}
-            self.fen = self.get_fen()
-            self.history.append({"fen": self.fen, "movement": self.movement})
-            return True
-        return False
+        # Update movement clock counts
+        self.count += 1
+        if self.count % 2 == 0:
+            self.full_move_clock += 1
+        self.half_move_clock += 1
+        if type(src_piece) == Pawn or type(tar_piece) != Empty:
+            self.half_move_clock = 0
+
+        # If the Pawn reached the button, then it would be promoted as promotion piece which passed through argument.
+        if type(self.board[src_row][src_col]) == Pawn and tar_row in [0, 7]:
+            color = self.board[src_row][src_col].get_color()
+            if role == "Rook":
+                piece = Rook(self, color)
+                piece.firstMove = False
+            elif role == "Knight":
+                piece = Knight(self, color)
+            elif role == "Queen":
+                piece = Queen(self, color)
+            else:
+                piece = Bishop(self, color)
+            self.board[src_row][src_col] = self.empty_cell
+            # noinspection PyTypeChecker
+            self.board[tar_row][tar_col] = piece
+            self.switch_turn()
+        else:
+            self.board[tar_row][tar_col] = src_piece
+            self.board[src_row][src_col] = self.empty_cell
+            self.switch_turn()
+
+        self.movement = {"src": Coordinate.encode(src), "tar": Coordinate.encode(tar)}
+        self.fen = self.get_fen()
+        self.history.append({"fen": self.fen, "movement": self.movement})
+        return True
 
     def undo(self) -> None:
         """
         Undo to the last step.
         :return: None
         """
-        if self.history > 0:
+        if len(self.history) > 0:
             del self.history[-1]
         self.load_fen(self.history[-1]["fen"])
         return None
@@ -365,8 +367,12 @@ class ChessGame:
         ending.
         :return: Game status which including Continue, Draw, BlackLoss, WhiteLoss
         """
+
+        # If keeping move neither Pawn or Capture for 50 half steps, the game would be ended as "Draw"
         if self.half_move_clock == 50:
             return "Draw"
+
+        # Not in check status, if the turn side is Stalemate, the game would be ended as "Draw", otherwise "Continue".
         if not self.is_being_checked():
             for row in range(8):
                 for col in range(8):
@@ -376,6 +382,9 @@ class ChessGame:
                             if not self.is_being_checked_after_move(Coordinate(row, col), tar):
                                 return "Continue"
             return "Draw"
+
+        # In check status, if the turn side could not release the check status, the game would be ended as the current
+        # turn side "Loss", otherwise "Continue".
         if self.is_being_checked():
             for row in range(8):
                 for col in range(8):
@@ -399,6 +408,90 @@ class ChessGame:
                     return Coordinate(row, col)
         raise FileNotFoundError
 
+    def load_fen(self, fen_str: str) -> None:
+        """
+        Based on the provided fen, recover the game board and game character values.
+        :param fen_str: A fen string which should be under fen standard
+        :return: None
+        """
+        index, row, col = 0, 7, 0
+        field = fen_str.split()
+
+        if field[1] == "w":
+            self.turn = Color.WHITE
+        else:
+            self.turn = Color.BLACK
+
+        self.en_passant_target_notation = field[3]
+        self.half_move_clock = int(field[4])
+        self.full_move_clock = int(field[5])
+        self.count = (int(field[5]) - 1) * 2 + (self.turn == Color.BLACK)
+        self.castling_notation = field[2]
+
+        while fen_str[index] != " ":
+            if fen_str[index] == "/":
+                row -= 1
+                col = 0
+            elif fen_str[index].isnumeric():
+                for i in range(int(fen_str[index])):
+                    self.board[row][col] = self.empty_cell
+                    col += 1
+            else:
+                piece = self.to_piece(fen_str[index])
+                if fen_str[index] == "R":
+                    if (col != 0 and col != 7) or row != 0:
+                        piece.firstMove = False
+                    elif col == 0 and "Q" not in self.castling_notation:
+                        piece.firstMove = False
+                    elif col == 7 and "K" not in self.castling_notation:
+                        piece.firstMove = False
+                if fen_str[index] == "r":
+                    if (col != 0 and col != 7) or row != 7:
+                        piece.firstMove = False
+                    elif col == 0 and "q" not in self.castling_notation:
+                        piece.firstMove = False
+                    elif col == 7 and "k" not in self.castling_notation:
+                        piece.firstMove = False
+
+                # noinspection PyTypeChecker
+                self.board[row][col] = piece
+                col += 1
+            index += 1
+        return None
+
+    def to_piece(self, char: str) -> PieceInterface:
+        """
+        Get the piece from the given char.
+        :param char: A char among (P N B R Q K p n b r q k)
+        :return: A piece
+        """
+        piece = Empty(None, Color.EMPTY)
+        if char == "P":
+            piece = Pawn(self, Color.WHITE)
+        if char == "N":
+            piece = Knight(self, Color.WHITE)
+        if char == "B":
+            piece = Bishop(self, Color.WHITE)
+        if char == "R":
+            piece = Rook(self, Color.WHITE)
+        if char == "Q":
+            piece = Queen(self, Color.WHITE)
+        if char == "K":
+            piece = King(self, Color.WHITE)
+        if char == "p":
+            piece = Pawn(self, Color.BLACK)
+        if char == "n":
+            piece = Knight(self, Color.BLACK)
+        if char == "b":
+            piece = Bishop(self, Color.BLACK)
+        if char == "r":
+            piece = Rook(self, Color.BLACK)
+        if char == "q":
+            piece = Queen(self, Color.BLACK)
+        if char == "k":
+            piece = King(self, Color.BLACK)
+        return piece
+
     def print_board(self) -> None:
         """
         Print the game board for the front end using.
@@ -419,88 +512,4 @@ class ChessGame:
         for col in range(8):
             print(str(col), end=" ")
         print()
-
         return None
-
-    def load_fen(self, fen_str: str) -> None:
-        """
-        Based on the provided fen, recover the game board and game character values.
-        :param fen_str: A fen string which should be under fen standard
-        :return: None
-        """
-        index, row, col = 0, 7, 0
-        field = fen_str.split()
-
-        if field[1] == "w":
-            self.turn = Color.WHITE
-        else:
-            self.turn = Color.BLACK
-
-        self.en_passant_target_notation = field[3]
-        self.half_move_clock = int(field[4])
-        self.full_move_clock = int(field[5])
-        self.count = (int(field[5]) - 1) * 2 + (self.turn == Color.BLACK)
-        castling = field[2]
-
-        while fen_str[index] != " ":
-            if fen_str[index] == "/":
-                row -= 1
-                col = 0
-            elif fen_str[index].isnumeric():
-                for i in range(int(fen_str[index])):
-                    self.board[row][col] = self.empty_cell
-                    col += 1
-            else:
-                piece = self.to_piece(fen_str[index])
-                if fen_str[index] == "R":
-                    if (col != 0 and col != 7) or row != 0:
-                        piece.firstMove = False
-                    elif col == 0 and "Q" not in castling:
-                        piece.firstMove = False
-                    elif col == 7 and "K" not in castling:
-                        piece.firstMove = False
-                if fen_str[index] == "r":
-                    if (col != 0 and col != 7) or row != 7:
-                        piece.firstMove = False
-                    elif col == 0 and "q" not in castling:
-                        piece.firstMove = False
-                    elif col == 7 and "k" not in castling:
-                        piece.firstMove = False
-
-                self.board[row][col] = piece
-                col += 1
-            index += 1
-        return None
-
-    def to_piece(self, char: str) -> PieceInterface:
-        """
-        Get the piece from the given char.
-        :param char: A char among (P N B R Q K p n b r q k)
-        :return: A piece 
-        """
-        p = Empty(None, Color.EMPTY)
-        if char == "P":
-            p = Pawn(self, Color.WHITE)
-        if char == "N":
-            p = Knight(self, Color.WHITE)
-        if char == "B":
-            p = Bishop(self, Color.WHITE)
-        if char == "R":
-            p = Rook(self, Color.WHITE)
-        if char == "Q":
-            p = Queen(self, Color.WHITE)
-        if char == "K":
-            p = King(self, Color.WHITE)
-        if char == "p":
-            p = Pawn(self, Color.BLACK)
-        if char == "n":
-            p = Knight(self, Color.BLACK)
-        if char == "b":
-            p = Bishop(self, Color.BLACK)
-        if char == "r":
-            p = Rook(self, Color.BLACK)
-        if char == "q":
-            p = Queen(self, Color.BLACK)
-        if char == "k":
-            p = King(self, Color.BLACK)
-        return p
