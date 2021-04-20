@@ -5,9 +5,7 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Container from 'react-bootstrap/Container'
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './ChessBoard.css';
 import Info from './Info';
-import InGameMenu from "./InGameMenu";
 import PromotionMenu from "./PromotionMenu";
 
 
@@ -196,17 +194,12 @@ export default function WithMoveValidation(props) {
           squareStyles,
           onSquareClick,
           setPromotion
-        }) => ([ 
+        }) => (
           <Container fluid style={{width:"100vw"}}>
             <Row>
                 <Info turn={turn} status={status}/>
-                <Col style={{textAlign: "right"}}>
-                  <InGameMenu/>
-                </Col>
             </Row>
-          </Container>,
-          <div className="board-center">
-            <Row> 
+            <Row className="justify-content-center mt-3"> 
             <Chessboard
               id="ChessBoard"
               width={350}
@@ -221,7 +214,7 @@ export default function WithMoveValidation(props) {
             />
             <PromotionMenu show={promotion} setPromotion={setPromotion}/>
             </Row>
-          </div>] 
+          </Container>
         )}
       </ChessBoard>
     </div>

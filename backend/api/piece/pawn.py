@@ -22,9 +22,13 @@ class Pawn(PieceInterface):
         en_passant_target_notation = field[3]
         if en_passant_target_notation == "-":
             return False
-        tar_row = int(en_passant_target_notation[-1]) - 2
+        if int(en_passant_target_notation[-1]) == 6:
+            tar_row = int(en_passant_target_notation[-1]) - 2
+        else:
+            tar_row = int(en_passant_target_notation[-1])
         tar_col = ord(en_passant_target_notation[0]) - ord("a")
         if row == tar_row and abs(col - tar_col) == 1 and tar_col == attack_col:
+            # and self.color != self.game.board[tar_row][tar_col]:
             return True
         return False
 

@@ -7,14 +7,14 @@ import {useHistory} from 'react-router-dom';
 
 
 function Navigation(props) {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    
     const [userName, setUserName] = useState("");
     useEffect(() => {
         (async function runEffect() {
             const response = await fetch('/user');
             const json = await response.json();
             if (json["valid"]) {
-                setIsLoggedIn(true);
+                props.setIsLoggedIn(true);
                 setUserName(json["username"]);
             }
         })();
@@ -27,9 +27,9 @@ function Navigation(props) {
     }
 
     const renderButton = () => {
-        if (isLoggedIn) {
+        if (props.isLoggedIn) {
             return (
-                <NavDropdown title={userName} flip alignRight id="basic-nav-dropdown" style={{minWidth: "auto"}}>
+                <NavDropdown title={userName} alignRight id="basic-nav-dropdown" style={{minWidth: "auto"}}>
                     <NavDropdown.Item>
                         <div style={{textAlign: "center", fontSize: "50%", fontWeight: "bold"}}>
                             Profile
@@ -59,7 +59,9 @@ function Navigation(props) {
     return (
         <Navbar bg="dark" expand="lg" variant="dark">
             <Navbar.Brand href="/" onClick={() => history.push('/')}>
-                CHESS
+                <div style={{fontFamily: 'Zen Dots'}}>
+                    CHESS
+                </div>
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
 

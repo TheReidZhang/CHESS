@@ -102,6 +102,14 @@ class ChessGame:
                 tar in src_piece.get_checked_moves()["moves"]:
             tar_row, tar_col = tar.get_tuple()
             tar_piece = self.board[tar_row][tar_col]
+
+            # fix en_passant bug
+            if type(src_piece) == Pawn and src_col != tar_col and tar_piece == self.empty_cell:
+                last_pawn_row, last_pawn_col = Coordinate.decode(self.history[-1]["movement"]["tar"]).get_tuple()
+                self.board[last_pawn_row][last_pawn_col] = self.empty_cell
+            # update en_passant notation
+            self.en_passant_target_notation = '-'
+
             if type(src_piece) == King:
                 src_piece.firstMove = False
             if type(src_piece) == Rook:
@@ -130,10 +138,10 @@ class ChessGame:
                     rook = self.board[src_row][0]
                     self.board[tar_row][tar_col + 1] = rook
                     self.board[src_row][0] = self.empty_cell
-            elif type(src_piece) == Pawn and src_col != tar_col and tar_piece == self.empty_cell:
-                # en_passant = True
-                last_pawn_row, last_pawn_col = Coordinate.decode(self.history[-1]["movement"]["tar"]).get_tuple()
-                self.board[last_pawn_row][last_pawn_col] = self.empty_cell
+            # elif type(src_piece) == Pawn and src_col != tar_col and tar_piece == self.empty_cell:
+            #     # en_passant = True
+            #     last_pawn_row, last_pawn_col = Coordinate.decode(self.history[-1]["movement"]["tar"]).get_tuple()
+            #     self.board[last_pawn_row][last_pawn_col] = self.empty_cell
             # update the movement counts
             self.count += 1
             if self.count % 2 == 0:

@@ -34,7 +34,7 @@ function Login(props) {
             </Modal.Header>
             <Modal.Body>
                 <Form onSubmit={onFormSubmit}>
-                    <Form.Group controlId="formBasicEmail">
+                    <Form.Group controlId="formBasicUsername">
                         <Form.Label>Username</Form.Label>
                         <Form.Control ref={usernameRef} type="username" placeholder="Enter username" />
                         <Form.Text className="text-muted">
