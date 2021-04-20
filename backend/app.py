@@ -13,12 +13,14 @@ def create_app(db_url="init"):
             request_data = json.loads(request.data)
             ret = driver.get_info(request_data, session["user"])
             return ret
+        return {"valid": False}
 
     @app.route('/chess/new', methods=['POST'])
     def new():
         if "user" in session:
             ret = driver.create_game(session["user"])
             return ret
+        return {"valid": False}
 
     @app.route('/chess/update', methods=['POST'])
     def result():
@@ -26,6 +28,7 @@ def create_app(db_url="init"):
             request_data = json.loads(request.data)
             ret = driver.update_game(request_data, session["user"])
             return ret
+        return {"valid": False}
 
     @app.route('/chess/<session_id>/<coordinate>', methods=['GET'])
     def show(session_id, coordinate):
@@ -33,11 +36,13 @@ def create_app(db_url="init"):
             session_id = int(session_id)
             ret = driver.get_checked_moves({"session_id": session_id, "coordinate": coordinate}, session["user"])
             return ret
+        return {"valid": False}
 
     @app.route('/resume', methods=['GET'])
     def resume():
         if "user" in session:
             return driver.resume_game(session["user"])
+        return {"valid": False}
 
     # for user account
     @app.route('/signup', methods=['POST'])
@@ -50,7 +55,7 @@ def create_app(db_url="init"):
     def sign_in():
         request_data = json.loads(request.data)
         ret = driver.login(request_data)
-        if ret["flag"]:
+        if ret["valid"]:
             session["user"] = request_data["username"]
         return ret
 
@@ -59,7 +64,15 @@ def create_app(db_url="init"):
         session.pop("user", None)
         return {"msg": "logged out"}
 
+    @app.route('/user', methods=['GET'])
+    def user_info():
+        if "user" in session:
+            ret = driver.get_user_info(session["user"])
+            return ret
+        return {"valid": False}
+
     return app
+
 
 if __name__ == '__main__':
     flask_app = create_app()

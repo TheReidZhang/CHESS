@@ -95,7 +95,7 @@ class ChessAPI:
                                                   "start_time": time,
                                                   "last_update": time})
         conn.close()
-        return {"session_id": session_id}
+        return {"session_id": session_id, "valid": True}
 
     def resume_game(self, username: str) -> dict:
         """
@@ -116,7 +116,7 @@ class ChessAPI:
                             "start_time": start_time,
                             "last_update": last_update})
         conn.close()
-        return {"resume_list": lst}
+        return {"resume_list": lst, "valid": True}
 
     def get_info(self, request: dict, username: str) -> dict:
         """
@@ -132,7 +132,7 @@ class ChessAPI:
             status = game.check_game_status()
             turn = game.get_turn()
             history = game.get_game_history()
-            return {"fen": fen, "status": status, "turn": turn, "history": history}
+            return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True}
 
     def update_game(self, request: dict, username: str) -> dict:
         """
@@ -182,8 +182,10 @@ class ChessAPI:
         if self.sessions[session_id][1] == username:
             coordinate = request["coordinate"]
             coordinate = Coordinate.decode(coordinate)
-            game = self.sessions[session_id]
-            return game.get_checked_moves(coordinate)
+            game = self.sessions[session_id][0]
+            ret = game.get_checked_moves(coordinate)
+            ret["valid"] = True
+            return ret
 
     def update_history(self, session_id: int) -> None:
         """
@@ -238,6 +240,12 @@ class ChessAPI:
                                                         and self.users.c.password == request["password"]))
         conn.close()
         if len(result.all()) > 0:
-            return {"flag": True}
-        return {"flag": False}
+            return {"valid": True}
+        return {"valid": False}
 
+    def get_user_info(self, username: str) -> dict:
+        conn = self.engine.connect()
+        result = conn.execute(self.users.select().where(self.users.c.username == username))
+        conn.close()
+        user = result.all()
+        return {"username": user[0]["username"], "total_hours": user[0]["total_hours"]}
