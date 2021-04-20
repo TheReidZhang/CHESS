@@ -55,7 +55,7 @@ class ChessAPI:
 
         for session_id in self.sessions:
             session_history = conn.execute(self.history.select().where(self.history.c.session_id == session_id).
-                                           order_by(self.history.c.step))
+                                           order_by(self.history.c.step)).all()
             game = self.sessions[session_id][0]
             game.init_history(session_history)
         conn.close()
@@ -193,13 +193,14 @@ class ChessAPI:
         :param session_id: Game session id which needs to update
         :return: None
         """
-        game = self.sessions[session_id]
+        game = self.sessions[session_id][0]
         game_history = game.get_history()
         if game_history:
-            src = game_history["movement"]["src"]
-            tar = game_history["movement"]["tar"]
+            #print(game_history)
+            src = game_history["src"]
+            tar = game_history["tar"]
             step = game_history["step"]
-            fen = game.history["fen"]
+            fen = game_history["fen"]
             conn = self.engine.connect()
             conn.execute(self.history.insert(), {"session_id": session_id,
                                                  "src": src,
@@ -232,7 +233,7 @@ class ChessAPI:
                                            "password": request["password"],
                                            "total_hours": 0})
         conn.close()
-        return {"username": request["username"]}
+        return {"username": request["username"], "valid": True}
 
     def login(self, request: dict) -> dict:
         conn = self.engine.connect()

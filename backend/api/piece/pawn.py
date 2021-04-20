@@ -14,6 +14,7 @@ class Pawn(PieceInterface):
         :param col: the col of the capturing pawn
         :return: True if en passant is available. Otherwise, False.
         """
+
         if len(self.game.history) == 0:
             return False
         last_fen = self.game.history[-1]["fen"]
