@@ -12,6 +12,7 @@ def create_app(db_url="init"):
         if "user" in session:
             request_data = json.loads(request.data)
             ret = driver.get_info(request_data, session["user"])
+            print(ret)
             return ret
         return {"valid": False}
 
