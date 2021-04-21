@@ -7,6 +7,7 @@ import Container from 'react-bootstrap/Container'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Info from './Info';
 import PromotionMenu from "./PromotionMenu";
+import GameOption from "./GameOption"
 
 
 class ChessBoard extends Component {
@@ -82,8 +83,29 @@ class ChessBoard extends Component {
     }));
   };
 
+  takeback = async() => {
+    const response = await fetch('/undo', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        session_id: this.state.session_id,
+       })
+    });
+    const json = response.json();
+    if (json["valid"]) {
+      this.setState({
+        fen: json["fen"],
+        pieceSquare: "",
+        status: json["status"],
+        turn: json["turn"],
+        history: json["history"],
+        validMoves: []
+    });
+    }
+  } 
+
   setPromotion = (role) => {
     this.setState({role: role})
+    
   }
 
 
@@ -176,7 +198,8 @@ class ChessBoard extends Component {
       squareStyles,
       position: fen,
       onSquareClick: this.onSquareClick,
-      setPromotion: this.setPromotion
+      setPromotion: this.setPromotion,
+      takeback: this.takeback
     });
   }
 }
@@ -193,11 +216,17 @@ export default function WithMoveValidation(props) {
           position, 
           squareStyles,
           onSquareClick,
-          setPromotion
+          setPromotion,
+          takeback
         }) => (
           <Container fluid style={{width:"100vw"}}>
             <Row>
+              <div className="mr-auto">
                 <Info turn={turn} status={status}/>
+                </div>
+                <div className="mr-sm-2 mt-1">
+                <GameOption takeback={takeback}/>
+                </div>
             </Row>
             <Row className="justify-content-center mt-3"> 
             <Chessboard
