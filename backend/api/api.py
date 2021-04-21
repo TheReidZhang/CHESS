@@ -15,7 +15,7 @@ class ChessAPI:
         """
         if db_url == "init":
             db_url = 'postgresql+psycopg2://postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432'
-        self.engine = create_engine(db_url, echo=True)
+        self.engine = create_engine(db_url)
         meta = MetaData()
 
         self.current_game = Table(
@@ -266,7 +266,7 @@ class ChessAPI:
             game.undo()
             steps = conn.execute(self.history.select().where(self.history.c.session_id == session_id).
                                  order_by(self.history.c.step)).all()
-            print(len(steps))
+
             conn.execute(self.history.delete().where(
                 and_(self.history.c.session_id == session_id,
                      self.history.c.step == len(steps))))

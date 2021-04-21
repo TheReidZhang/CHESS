@@ -10,6 +10,7 @@ import PromotionMenu from "./PromotionMenu";
 import GameOption from "./GameOption"
 
 
+
 class ChessBoard extends Component {
   static propTypes = { children: PropTypes.func };
 
@@ -29,11 +30,16 @@ class ChessBoard extends Component {
       validMoves: [],
       turn: "Loading...",
       status: "Loading...",
-      role: "Queen"
+      role: "Queen",
+      undo: false
     };
   }
+ 
+  componentDidMount = async () => {
+    await this.getInfo();
+  }
 
-  async componentDidMount() {
+  getInfo = async() => {
     const fen_response = await fetch('/chess/info', {
       method: 'POST',
       body: JSON.stringify({
@@ -43,17 +49,18 @@ class ChessBoard extends Component {
     if (!fen_response.ok) {
       throw Error("None-existed session.");
     }
-    
+    console.log("didmount")
     const fen_json = await fen_response.json();
     const fen = fen_json["fen"];
     const status = fen_json["status"];
     const turn = fen_json["turn"]
     const history = fen_json["history"];
-    const promotion = fen_json["promotion"];
-    this.setState({fen: fen, status: status, turn: turn, history: history, promotion: promotion});
-    this.setState(({ validMoves, history }) => ({
-      squareStyles: squareStyling({ validMoves, history })
-    }));
+    this.setState({fen: fen, status: status, turn: turn, history: history}, () => {
+      this.setState(({ validMoves, history }) => ({
+        squareStyles: squareStyling({ validMoves, history })
+      }));
+    });
+    this.setState({undo: false});
   }
 
   // show possible moves
@@ -90,22 +97,15 @@ class ChessBoard extends Component {
         session_id: this.state.session_id,
        })
     });
-    const json = response.json();
+    const json = await response.json();
     if (json["valid"]) {
-      this.setState({
-        fen: json["fen"],
-        pieceSquare: "",
-        status: json["status"],
-        turn: json["turn"],
-        history: json["history"],
-        validMoves: []
-    });
+      this.setState({undo: true});
     }
+    await this.getInfo();
   } 
 
   setPromotion = (role) => {
     this.setState({role: role})
-    
   }
 
 
@@ -135,15 +135,13 @@ class ChessBoard extends Component {
         const status = fen_json["status"];
         const turn = fen_json["turn"];
         const history = fen_json["history"];
-        const promotion = fen_json["promotion"];
         this.setState({
           fen: fen,
           pieceSquare: "",
           status: status,
           turn: turn,
           history: history,
-          validMoves: [],
-          promotion: promotion
+          validMoves: []
         });
         
 
@@ -151,10 +149,6 @@ class ChessBoard extends Component {
           squareStyles: squareStyling({ validMoves, history })
         }));
 
-        if (promotion) {
-          
-        }
-        
         const update_is_being_checked = update_json["is_being_checked"];
         if (update_is_being_checked) {
           setTimeout(function() {
@@ -189,17 +183,17 @@ class ChessBoard extends Component {
   };
 
   render() {
-    const { fen, squareStyles, turn, status, promotion } = this.state;
+    const { fen, squareStyles, turn, status, undo } = this.state;
     
     return this.props.children({
       turn,
       status,
-      promotion,
       squareStyles,
       position: fen,
+      undo,
       onSquareClick: this.onSquareClick,
       setPromotion: this.setPromotion,
-      takeback: this.takeback
+      takeback: this.takeback,
     });
   }
 }
@@ -212,8 +206,8 @@ export default function WithMoveValidation(props) {
         {({        
           turn,
           status,
-          promotion,
           position, 
+          undo,
           squareStyles,
           onSquareClick,
           setPromotion,
@@ -240,8 +234,9 @@ export default function WithMoveValidation(props) {
               squareStyles={squareStyles}
               onSquareClick={onSquareClick}
               draggable={false}
+              undo={undo}
             />
-            <PromotionMenu show={promotion} setPromotion={setPromotion}/>
+            <PromotionMenu setPromotion={setPromotion}/>
             </Row>
           </Container>
         )}
