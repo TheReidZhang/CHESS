@@ -24,6 +24,7 @@ class ChessAPI:
             Column('session_id', Integer, primary_key=True),
             Column('fen', String),
             Column('status', String),
+            Column('mode', String),
             Column('start_time', DateTime),
             Column('last_update', DateTime))
 
@@ -45,6 +46,7 @@ class ChessAPI:
         meta.create_all(self.engine)
 
         self.sessions = {}
+        self.modes = {}
         conn = self.engine.connect()
         sessions_info = conn.execute(self.current_game.select())
         for session in sessions_info:
@@ -52,6 +54,7 @@ class ChessAPI:
             fen = session["fen"]
             game = ChessGame(fen)
             self.sessions[session_id] = (game, session["username"])
+            self.modes[session_id] = session["mode"]
 
         for session_id in self.sessions:
             session_history = conn.execute(self.history.select().where(self.history.c.session_id == session_id).
@@ -76,7 +79,7 @@ class ChessAPI:
                     break
         return random_session_id
 
-    def create_game(self, username: str) -> dict:
+    def create_game(self, username: str, mode: str) -> dict:
         """
         Create a new chess game in put it in the dictionary, store the data in the database.
         :return: A dict where only has one key "session_id"
@@ -84,6 +87,7 @@ class ChessAPI:
         session_id = self.generate_unique_session_id()
         game = ChessGame()
         self.sessions[session_id] = (game, username)
+        self.modes[session_id] = mode
         time = datetime.datetime.now()
         fen = game.get_fen()
         status = game.check_game_status()
@@ -92,6 +96,7 @@ class ChessAPI:
                                                   "session_id": session_id,
                                                   "status": status,
                                                   "fen": fen,
+                                                  "mode": mode,
                                                   "start_time": time,
                                                   "last_update": time})
         conn.close()
@@ -110,8 +115,8 @@ class ChessAPI:
         for ele in ret:
             session_id = ele[1]
             status = ele[3]
-            start_time = ele[4]
-            last_update = ele[5]
+            start_time = ele[5]
+            last_update = ele[6]
             if status == "Continue":
                 lst.append({"session_id": session_id,
                             "start_time": start_time,
@@ -160,7 +165,7 @@ class ChessAPI:
             status = game.check_game_status()
             turn = game.get_turn()
             # AI's turns
-            if status == "Continue" and valid:
+            if status == "Continue" and valid and self.modes[session_id] != "pvp":
                 ai = SimpleAI(game)
                 src_row, src_col, tar_row, tar_col = ai.get_next_move()
                 src = Coordinate(src_row, src_col)
@@ -253,3 +258,17 @@ class ChessAPI:
         conn.close()
         user = result.all()
         return {"username": user[0]["username"], "total_hours": user[0]["total_hours"], "valid": True}
+
+    def undo(self, username: str, session_id: int) -> dict:
+        if self.sessions[session_id][1] == username:
+            game = self.sessions[session_id][0]
+            game.undo()
+            if self.modes[session_id] != "pvp":
+                game.undo()
+            fen = game.get_fen()
+            status = game.check_game_status()
+            turn = game.get_turn()
+            history = game.get_game_history()
+            return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True}
+
+        return {"valid": False}

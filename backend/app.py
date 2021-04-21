@@ -18,7 +18,8 @@ def create_app(db_url="init"):
     @app.route('/chess/new', methods=['POST'])
     def new():
         if "user" in session:
-            ret = driver.create_game(session["user"])
+            mode = json.loads(request.data)["mode"]
+            ret = driver.create_game(session["user"], mode)
             return ret
         return {"valid": False}
 
@@ -42,6 +43,13 @@ def create_app(db_url="init"):
     def resume():
         if "user" in session:
             return driver.resume_game(session["user"])
+        return {"valid": False}
+
+    @app.route('/undo', methods=['POST'])
+    def undo():
+        if "user" in session:
+            request_data = json.loads(request.data)
+            return driver.undo(session["user"], request_data["session_id"])
         return {"valid": False}
 
     # for user account
