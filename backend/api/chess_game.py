@@ -189,7 +189,11 @@ class ChessGame:
         """
         if len(self.history) > 0:
             del self.history[-1]
-        self.load_fen(self.history[-1]["fen"])
+
+        if len(self.history) > 0:
+            self.load_fen(self.history[-1]["fen"])
+        else:
+            self.load_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         return None
 
     def get_history(self) -> dict:

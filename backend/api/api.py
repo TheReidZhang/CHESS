@@ -3,7 +3,7 @@ from api.piece.coordinate import Coordinate
 from api.simple_ai import SimpleAI
 import random
 import datetime
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_, func
 
 
 class ChessAPI:
@@ -15,7 +15,7 @@ class ChessAPI:
         """
         if db_url == "init":
             db_url = 'postgresql+psycopg2://postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432'
-        self.engine = create_engine(db_url)
+        self.engine = create_engine(db_url, echo=True)
         meta = MetaData()
 
         self.current_game = Table(
@@ -261,10 +261,21 @@ class ChessAPI:
 
     def undo(self, username: str, session_id: int) -> dict:
         if self.sessions[session_id][1] == username:
+            conn = self.engine.connect()
             game = self.sessions[session_id][0]
             game.undo()
+            steps = conn.execute(self.history.select().where(self.history.c.session_id == session_id).
+                                 order_by(self.history.c.step)).all()
+            print(len(steps))
+            conn.execute(self.history.delete().where(
+                and_(self.history.c.session_id == session_id,
+                     self.history.c.step == len(steps))))
             if self.modes[session_id] != "pvp":
                 game.undo()
+                conn.execute(self.history.delete().where(
+                    and_(self.history.c.session_id == session_id,
+                         self.history.c.step == len(steps)-1)))
+            conn.close()
             fen = game.get_fen()
             status = game.check_game_status()
             turn = game.get_turn()
