@@ -9,16 +9,17 @@ import ModalBtn from './ModalBtn';
 import Modal from 'react-bootstrap/Modal'
 
 function MainMenu() {
+    const [showMode, setShowMode] = useState(false);
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [resumeList, setResumeList] = useState([]);
 
     const history = useHistory();
 
-    const new_game = async() => {
+    const new_game = async(mode) => {
         const response = await fetch('/chess/new', {
             method: 'POST',
             body: JSON.stringify({ 
-              mode: "123"})
+              mode: mode})
           });
         const json = await response.json();
         const session = json["session_id"];
@@ -42,9 +43,35 @@ function MainMenu() {
         <div className="center-container">
             <Row className="text-center">
                 <Col md={12} xs={12} lg={12} sm={12} className="mb-5">
-                    <Button variant="outline-dark" size="lg" onClick={new_game} className="myBtn">
+                    <Button variant="outline-dark" size="lg" onClick={() => setShowMode(true)} className="myBtn">
                         New Game
                     </Button>
+                    <Modal show={showMode} onHide={() => setShowMode(false)}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Choose Mode</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body> 
+                            <Row className="align-items-center mb-3">
+                                <Col>
+                                    <div style={{ display: "flex", justifyContent: "center" }}>
+                                        <Button variant="outline-dark" size="md" onClick={() => new_game("easy")}>
+                                            Easy
+                                        </Button>
+                                    </div>
+                                </Col>
+                            </Row>
+
+                            <Row className="align-items-center mb-3">
+                                <Col>
+                                    <div style={{ display: "flex", justifyContent: "center" }}>
+                                        <Button variant="outline-dark" size="md" onClick={() => new_game("pvp")}>
+                                            PvP
+                                        </Button>
+                                    </div>
+                                </Col>
+                            </Row>
+                        </Modal.Body>
+                    </Modal>
                 </Col>
 
                 <Col md={12} xs={12} lg={12} sm={12} className="mb-5">
@@ -53,7 +80,7 @@ function MainMenu() {
                     </Button>
                     <Modal show={modalIsOpen} onHide={() => setModalIsOpen(false)}>
                         <Modal.Header closeButton>
-                            <Modal.Title>RESUME</Modal.Title>
+                            <Modal.Title>Resume</Modal.Title>
                         </Modal.Header>
                         <Modal.Body> 
                             {resumeList}
