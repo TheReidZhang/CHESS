@@ -49,6 +49,7 @@ class ChessGame:
                             "tar": ele[3]}
                 fen = ele[4]
                 self.history.append({"fen": fen, "movement": movement})
+        return None
 
     def get_game_history(self) -> list:
         """
@@ -137,12 +138,14 @@ class ChessGame:
                 else:
                     self.en_passant_target_notation = Coordinate(tar_row + 1, tar_col).encode()
 
-        # Update the En passant
+        # Implement Castle
         if type(src_piece) == King and abs(src_col - tar_col) == 2:
+            # Long castling
             if tar_col > src_col:
                 rook = self.board[src_row][7]
                 self.board[tar_row][tar_col - 1] = rook
                 self.board[src_row][7] = self.empty_cell
+            # Short castling
             else:
                 rook = self.board[src_row][0]
                 self.board[tar_row][tar_col + 1] = rook
