@@ -5,14 +5,14 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-function ModalBtn(props) {
+function ModalBtn2(props) {
     const history = useHistory();
 
     return (
         <Row className="align-items-center mb-3">
             <Col>
                 <div style={{ display: "flex", justifyContent: "center" }}>
-                    <Button variant="outline-dark" size="sm" onClick={() => history.push("/chess/" + props.session_id)}>
+                    <Button variant="outline-dark" size="sm" onClick={() => history.push("/replay/" + props.session_id)}>
                         Mode: {props.mode.toUpperCase()}
                         <br/>
                         Session ID: {props.session_id}
@@ -28,4 +28,4 @@ function ModalBtn(props) {
     );
 }
 
-export default ModalBtn;
+export default ModalBtn2;

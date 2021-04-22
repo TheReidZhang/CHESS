@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import Chessboard from "chessboardjsx";
 import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
 import Container from 'react-bootstrap/Container'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Info from './Info';
@@ -31,7 +30,8 @@ class ChessBoard extends Component {
       turn: "Loading...",
       status: "Loading...",
       role: "Queen",
-      undo: false
+      undo: true,
+      mode: "Loading..."
     };
   }
  
@@ -49,18 +49,19 @@ class ChessBoard extends Component {
     if (!fen_response.ok) {
       throw Error("None-existed session.");
     }
-    console.log("didmount")
+    
     const fen_json = await fen_response.json();
     const fen = fen_json["fen"];
     const status = fen_json["status"];
     const turn = fen_json["turn"]
     const history = fen_json["history"];
-    this.setState({fen: fen, status: status, turn: turn, history: history}, () => {
+    console.log(history);
+    const mode = fen_json["mode"];
+    this.setState({fen: fen, status: status, turn: turn, history: history, mode: mode}, () => {
       this.setState(({ validMoves, history }) => ({
         squareStyles: squareStyling({ validMoves, history })
       }));
     });
-    this.setState({undo: false});
   }
 
   // show possible moves
@@ -91,6 +92,9 @@ class ChessBoard extends Component {
   };
 
   takeback = async() => {
+    let ed = 0
+    if (this.state.mode !== "pvp") {ed = 1}
+    for (var i = 0; i <= ed; i++) {
     const response = await fetch('/undo', {
       method: 'POST',
       body: JSON.stringify({ 
@@ -98,11 +102,8 @@ class ChessBoard extends Component {
        })
     });
     const json = await response.json();
-    if (json["valid"]) {
-      this.setState({undo: true});
-    }
     await this.getInfo();
-  } 
+  } }
 
   setPromotion = (role) => {
     this.setState({role: role})
@@ -183,7 +184,7 @@ class ChessBoard extends Component {
   };
 
   render() {
-    const { fen, squareStyles, turn, status, undo } = this.state;
+    const { fen, squareStyles, turn, status, undo, mode } = this.state;
     
     return this.props.children({
       turn,
@@ -191,6 +192,7 @@ class ChessBoard extends Component {
       squareStyles,
       position: fen,
       undo,
+      mode,
       onSquareClick: this.onSquareClick,
       setPromotion: this.setPromotion,
       takeback: this.takeback,
@@ -208,6 +210,7 @@ export default function WithMoveValidation(props) {
           status,
           position, 
           undo,
+          mode,
           squareStyles,
           onSquareClick,
           setPromotion,
@@ -216,7 +219,7 @@ export default function WithMoveValidation(props) {
           <Container fluid style={{width:"100vw"}}>
             <Row>
               <div className="mr-auto">
-                <Info turn={turn} status={status}/>
+                <Info turn={turn} status={status} mode={mode}/>
                 </div>
                 <div className="mr-sm-2 mt-1">
                 <GameOption takeback={takeback}/>
