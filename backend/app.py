@@ -12,7 +12,6 @@ def create_app(db_url="init"):
         if "user" in session:
             request_data = json.loads(request.data)
             ret = driver.get_info(request_data, session["user"])
-            print(ret)
             return ret
         return {"valid": False}
 
@@ -51,6 +50,13 @@ def create_app(db_url="init"):
         if "user" in session:
             request_data = json.loads(request.data)
             return driver.undo(session["user"], request_data["session_id"])
+        return {"valid": False}
+
+    @app.route('/replay', methods=['POST'])
+    def replay():
+        if "user" in session:
+            request_data = json.loads(request.data)
+            return driver.replay(session["user"], request_data["session_id"], request_data["step"])
         return {"valid": False}
 
     # for user account
