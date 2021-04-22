@@ -5,6 +5,13 @@ from api.piece.rook import Rook
 
 class King(PieceInterface):
     def __init__(self, game: 'ChessGame', color: Color):
+        """
+        The firstMove is true means the king has not moved yet.
+        If it is false, it means the king has moved.
+        Used for castling.
+        :param game: a chess game instance
+        :param color: indicate the color of the piece
+        """
         super().__init__(game, color)
         self.firstMove = True   # True if the king has not been moved
 

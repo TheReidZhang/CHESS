@@ -9,10 +9,17 @@ class Color(Enum):
 
 class PieceInterface:
     def __init__(self, game: 'ChessGame', color: Color):
+        """
+        :param game: a chess game instance
+        :param color: indicate the color of the piece
+        """
         self.game = game
         self.color = color
 
     def get_moves(self) -> list:
+        """
+        This function will be implemented in each piece class.
+        """
         raise NotImplementedError
 
     def get_checked_moves(self) -> dict:
@@ -46,4 +53,7 @@ class PieceInterface:
         return 0 <= row < 8 and 0 <= col < 8
 
     def to_string(self) -> str:
+        """
+        This function will be implemented in each piece class.
+        """
         raise NotImplementedError
