@@ -3,15 +3,14 @@ from api.piece.coordinate import Coordinate
 from api.simple_ai import SimpleAI
 import random
 import datetime
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_, func
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_
 
 
 class ChessAPI:
     def __init__(self, db_url="init"):
         """
-        Set up database using SQLite and put the db file under the same directory if db file does not exit.
-        Connect to the database, fetch data and create dict sessions where key is session_id and value is
-        chess game instance.
+        Set up database using db_url. Connect to the database, fetch data and create dict sessions where key is
+        session_id and value is chess (game instance, username).
         """
         if db_url == "init":
             db_url = 'postgresql+psycopg2://postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432'
@@ -105,8 +104,8 @@ class ChessAPI:
     def resume_game(self, username: str) -> dict:
         """
         Get all on-going unfinished sessions and their start time and last update time.
-        :return: A dict which only has one key "resume-list" and value as a list of dict storing session id,
-        start time, and last update
+        :return: A dict which has key "resume_list" and value as a list of dict storing session id,
+        start time, last update and mode
         """
         conn = self.engine.connect()
         ret = conn.execute(self.current_game.select().where(self.current_game.c.username == username).
@@ -127,8 +126,9 @@ class ChessAPI:
 
     def replay_game(self, username: str) -> dict:
         """
-        :param username:
-        :return:
+        Get all sessions that could be replayed
+        :return: A dict which has key "replay_list" and value as a list of dict storing session id,
+        start time, last update and mode
         """
         conn = self.engine.connect()
         ret = conn.execute(self.current_game.select().where(self.current_game.c.username == username).
@@ -151,7 +151,7 @@ class ChessAPI:
         Get the game info of a certain game.
         :param username: logged in user
         :param request: A dict with one key "session_id"
-        :return: A dict with key "fen", "status", and "history"
+        :return: A dict with key "fen", "status", "history", "turn" and "mode" and corresponding values
         """
         session_id = request["session_id"]
         if self.sessions[session_id][1] == username:
@@ -166,11 +166,10 @@ class ChessAPI:
     def update_game(self, request: dict, username: str) -> dict:
         """
         Update a certain game from source to target, and promotion role if occurred.
+        :param username: logged in user
         :param request: A dict including session id, source coordinate, target coordinate, and promotion role.
-        :param username:
         :return: A dict including info about update validation, whether being checked, game status and turn color.
         """
-
         session_id = request["session_id"]
         if self.sessions[session_id][1] == username:
             src = request["src"]
@@ -207,7 +206,7 @@ class ChessAPI:
         """
         Get all valid moves which won't let you be checked in certain game for a coordinate.
         :param request: A dict including session id and piece coordinate
-        :param username:
+        :param username: logged in user
         :return: A dict which including all valid moves which won't let you be checked in certain game for a coordinate.
         """
         session_id = request["session_id"]
@@ -258,7 +257,11 @@ class ChessAPI:
         conn.close()
 
     def sign_up(self, request: dict) -> dict:
-
+        """
+        Sign a user up
+        :param request: A dict with key "username" and "password"
+        :return: A dict with key "valid" indicates whether successfully sign the user up
+        """
         conn = self.engine.connect()
         if conn.execute(self.users.select().where(self.users.c.username == request["username"])).all():
             return {"valid": False}
@@ -269,6 +272,11 @@ class ChessAPI:
         return {"username": request["username"], "valid": True}
 
     def login(self, request: dict) -> dict:
+        """
+        For user to login their account
+        :param request: A dict with key "username" and "password" of a registered user
+        :return: A dict with key "valid" indicates whether successfully log the user in
+        """
         conn = self.engine.connect()
         result = conn.execute(self.users.select().where(
             and_(self.users.c.username == request["username"],
@@ -279,6 +287,10 @@ class ChessAPI:
         return {"valid": False}
 
     def get_user_info(self, username: str) -> dict:
+        """
+        Get information associated with the logged in user
+        :return: A dict with key "username", "total_hours", "valid" and corresponding values
+        """
         conn = self.engine.connect()
         result = conn.execute(self.users.select().where(self.users.c.username == username))
         user = result.all()
@@ -286,6 +298,10 @@ class ChessAPI:
         return {"username": user[0]["username"], "total_hours": user[0]["total_hours"], "valid": True}
 
     def undo(self, username: str, session_id: int) -> dict:
+        """
+        Undo one step in the game, will delete history in both game() and database table
+        :return: A dict with information of the game after undo
+        """
         if self.sessions[session_id][1] == username:
             game = self.sessions[session_id][0]
             game.undo()
@@ -310,6 +326,10 @@ class ChessAPI:
         return {"valid": False}
 
     def replay(self, username: str, session_id: int, step: int) -> dict:
+        """
+        Get information of certain game after certain step
+        :return: A dict with key "fen", "history" and "valid" with corresponding values
+        """
         if self.sessions[session_id][1] == username:
             if step == 0:
                 return {"fen": "start", "history": {}, "valid": True}
