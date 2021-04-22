@@ -127,7 +127,6 @@ class ChessAPI:
 
     def replay_game(self, username: str) -> dict:
         """
-
         :param username:
         :return:
         """
@@ -202,6 +201,7 @@ class ChessAPI:
                 status = game.check_game_status()
                 turn = game.get_turn()
             return {"valid": valid, "is_being_checked": is_being_checked, "game_status": status, "turn": turn}
+        return {"valid": False}
 
     def get_checked_moves(self, request: dict, username: str) -> dict:
         """
@@ -281,8 +281,8 @@ class ChessAPI:
     def get_user_info(self, username: str) -> dict:
         conn = self.engine.connect()
         result = conn.execute(self.users.select().where(self.users.c.username == username))
-        conn.close()
         user = result.all()
+        conn.close()
         return {"username": user[0]["username"], "total_hours": user[0]["total_hours"], "valid": True}
 
     def undo(self, username: str, session_id: int) -> dict:
@@ -307,7 +307,6 @@ class ChessAPI:
             turn = game.get_turn()
             history = game.get_game_history()
             return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True}
-
         return {"valid": False}
 
     def replay(self, username: str, session_id: int, step: int) -> dict:
