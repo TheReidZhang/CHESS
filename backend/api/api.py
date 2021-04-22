@@ -137,8 +137,9 @@ class ChessAPI:
             fen = game.get_fen()
             status = game.check_game_status()
             turn = game.get_turn()
+            mode = self.modes[session_id]
             history = game.get_game_history()
-            return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True}
+            return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True, "mode": mode}
 
     def update_game(self, request: dict, username: str) -> dict:
         """
@@ -261,25 +262,34 @@ class ChessAPI:
 
     def undo(self, username: str, session_id: int) -> dict:
         if self.sessions[session_id][1] == username:
-            conn = self.engine.connect()
             game = self.sessions[session_id][0]
             game.undo()
+            conn = self.engine.connect()
             steps = conn.execute(self.history.select().where(self.history.c.session_id == session_id).
                                  order_by(self.history.c.step)).all()
-
             conn.execute(self.history.delete().where(
                 and_(self.history.c.session_id == session_id,
                      self.history.c.step == len(steps))))
-            if self.modes[session_id] != "pvp":
-                game.undo()
-                conn.execute(self.history.delete().where(
-                    and_(self.history.c.session_id == session_id,
-                         self.history.c.step == len(steps)-1)))
-            conn.close()
+
+            time = datetime.datetime.now()
             fen = game.get_fen()
             status = game.check_game_status()
+            conn.execute(self.current_game.update().where(self.current_game.c.session_id == session_id),
+                         {"status": status,
+                          "fen": fen,
+                          "last_update": time})
+            conn.close()
             turn = game.get_turn()
             history = game.get_game_history()
             return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True}
 
+        return {"valid": False}
+
+    def replay(self, username: str, session_id: int, step: int) -> dict:
+        if self.sessions[session_id][1] == username:
+            conn = self.engine.connect()
+            result = conn.execute(self.history.select().where(and_(self.history.c.session_id == session_id,
+                                                                   self.history.c.step == step))).all()[0]
+            conn.close()
+            return {"fen": result["fen"], "tar": result["tar"], "src": result["src"], "valid": True}
         return {"valid": False}
