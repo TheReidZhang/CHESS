@@ -1,6 +1,6 @@
 {
   "name": "chess_ui",
-  "proxy": "http://0.0.0.0:5000/",
+  "proxy": "http://backend:5000/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

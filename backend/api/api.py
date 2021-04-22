@@ -260,6 +260,8 @@ class ChessAPI:
     def sign_up(self, request: dict) -> dict:
 
         conn = self.engine.connect()
+        if conn.execute(self.users.select().where(self.users.c.username == request["username"])).all():
+            return {"valid": False}
         conn.execute(self.users.insert(), {"username": request["username"],
                                            "password": request["password"],
                                            "total_hours": 0})
