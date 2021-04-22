@@ -27,7 +27,9 @@ function Signup(props) {
             history.go(0);
         }
         else {
-            alert(json["msg"]);
+            alert("Username already exists!");
+            usernameRef.current.value = ""
+            passwordRef.current.value = ""
         }
     }
 
