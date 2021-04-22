@@ -7,6 +7,7 @@ import WithMoveValidation from "./board/WithMoveValidation";
 import MainMenu from './menu/MainMenu';
 import Container from 'react-bootstrap/Container'
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
+import Replays from './board/Replay'
 
 function App() {
   const [showLogin, setShowLogin] = useState(false);
@@ -66,6 +67,7 @@ function App() {
         <Signup showSignup={showSignup} handleSignupClose={handleSignupClose} />
         <Switch>
           <Route path="/chess/:session_id" exact component={WithMoveValidation} />
+          <Route path="/replay/:session_id" exact component={Replays} />
           <Route path="/" exact>
             <div className="center-container">
               {renderMenu()}

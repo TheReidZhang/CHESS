@@ -120,9 +120,32 @@ class ChessAPI:
             if status == "Continue":
                 lst.append({"session_id": session_id,
                             "start_time": start_time,
-                            "last_update": last_update})
+                            "last_update": last_update,
+                            "mode": self.modes[session_id]})
         conn.close()
         return {"resume_list": lst, "valid": True}
+
+    def replay_game(self, username: str) -> dict:
+        """
+
+        :param username:
+        :return:
+        """
+        conn = self.engine.connect()
+        ret = conn.execute(self.current_game.select().where(self.current_game.c.username == username).
+                           order_by(self.current_game.c.last_update.desc()))
+        lst = []
+        for ele in ret:
+            session_id = ele[1]
+            start_time = ele[5]
+            last_update = ele[6]
+
+            lst.append({"session_id": session_id,
+                        "start_time": start_time,
+                        "last_update": last_update,
+                        "mode": self.modes[session_id]})
+        conn.close()
+        return {"replay_list": lst, "valid": True}
 
     def get_info(self, request: dict, username: str) -> dict:
         """
@@ -287,9 +310,15 @@ class ChessAPI:
 
     def replay(self, username: str, session_id: int, step: int) -> dict:
         if self.sessions[session_id][1] == username:
+            if step == 0:
+                return {"fen": "start", "history": {}, "valid": True}
             conn = self.engine.connect()
             result = conn.execute(self.history.select().where(and_(self.history.c.session_id == session_id,
-                                                                   self.history.c.step == step))).all()[0]
+                                                                   self.history.c.step == step))).all()
             conn.close()
-            return {"fen": result["fen"], "tar": result["tar"], "src": result["src"], "valid": True}
+            if result:
+                result = result[0]
+                history = {"src": result["src"],
+                           "tar": result["tar"]}
+                return {"fen": result["fen"], "history": history, "valid": True}
         return {"valid": False}

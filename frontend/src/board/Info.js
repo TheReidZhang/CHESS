@@ -24,6 +24,7 @@ function Info(props) {
                 <Card.Body >
                     <Card.Text >
                         Time: {time} <br/>
+                        Mode: {props.mode.toUpperCase()} <br/>
                         Turn: {props.turn} <br/>
                         Status: {props.status}
                     </Card.Text>

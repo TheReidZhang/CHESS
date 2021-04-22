@@ -45,6 +45,12 @@ def create_app(db_url="init"):
             return driver.resume_game(session["user"])
         return {"valid": False}
 
+    @app.route('/replays', methods=['GET'])
+    def replays():
+        if "user" in session:
+            return driver.replay_game(session["user"])
+        return {"valid": False}
+
     @app.route('/undo', methods=['POST'])
     def undo():
         if "user" in session:
