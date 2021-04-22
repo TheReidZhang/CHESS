@@ -9,6 +9,7 @@ import {useHistory} from 'react-router-dom';
 function Navigation(props) {
     
     const [userName, setUserName] = useState("");
+    const [totalHours, setTotalHours] = useState(0);
     useEffect(() => {
         (async function runEffect() {
             const response = await fetch('/user');
@@ -16,6 +17,7 @@ function Navigation(props) {
             if (json["valid"]) {
                 props.setIsLoggedIn(true);
                 setUserName(json["username"]);
+                setTotalHours(json["total_hours"]);
             }
         })();
     }, []);
@@ -31,6 +33,12 @@ function Navigation(props) {
         if (props.isLoggedIn) {
             return (
                 <NavDropdown title={userName} alignRight id="basic-nav-dropdown" style={{minWidth: "auto"}}>
+                    <NavDropdown.Item>
+                        <div style={{textAlign: "center", fontSize: "50%", fontWeight: "bold"}}>
+                        Total Hours: {totalHours}
+                        </div>
+                    </NavDropdown.Item>
+                    <NavDropdown.Divider />
                     <NavDropdown.Item>
                         <div style={{textAlign: "center", fontSize: "50%", fontWeight: "bold"}}>
                             Profile
