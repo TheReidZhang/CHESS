@@ -3,6 +3,9 @@ from api.piece.coordinate import Coordinate
 
 
 class Bishop(PieceInterface):
+    """
+    Piece Bishop
+    """
     def get_moves(self) -> list:
         """
         :return: a list of all available moves of the piece in order

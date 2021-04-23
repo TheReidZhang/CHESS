@@ -4,6 +4,9 @@ from api.piece.rook import Rook
 
 
 class King(PieceInterface):
+    """
+    Piece King
+    """
     def __init__(self, game: 'ChessGame', color: Color):
         """
         The firstMove is true means the king has not moved yet.

@@ -2,6 +2,9 @@ from api.piece.piece_interface import PieceInterface
 
 
 class Empty(PieceInterface):
+    """
+    Empty Piece
+    """
     def get_moves(self) -> list:
         """
         This is empty piece meaning at this square there is no pieces and no moves.

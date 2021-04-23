@@ -5,6 +5,9 @@ from api.piece.piece_interface import Color
 
 
 class SimpleAI:
+    """
+    Implements an easy computer AI to play against the user
+    """
     def __init__(self, game: 'ChessGame'):
         self.game = game
         self.values = {"p": 1, "P": 1,
@@ -25,7 +28,11 @@ class SimpleAI:
             [0, 0, 0, 0, 0, 0, 0, 0]
         ]
 
-    def get_value(self, board):
+    def get_value(self, board: list) -> float:
+        """
+        :param board: A 8*8 2d array that records a game board
+        :return: A float represents the value of current game state, AI uses this value to decide which move to place.
+        """
         ret = 0
         for row in range(8):
             for col in range(8):
@@ -35,7 +42,11 @@ class SimpleAI:
                     ret += self.board_value[row][col]
         return ret
 
-    def get_next_move(self):
+    def get_next_move(self) -> tuple:
+        """
+        AI will brute force all valid moves and choose the one with the biggest value from get_value()
+        :return: A four tuple indicates AI's move
+        """
         board = copy.deepcopy(self.game.board)
         src_row, src_col, tar_row, tar_col = 0, 0, 0, 0
         max_score = -10000

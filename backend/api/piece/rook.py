@@ -3,6 +3,9 @@ from api.piece.coordinate import Coordinate
 
 
 class Rook(PieceInterface):
+    """
+    Piece Rook
+    """
     def __init__(self, game: 'ChessGame', color: Color):
         """
         The firstMove is true means the rook has not moved yet.
