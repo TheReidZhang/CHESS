@@ -1,0 +1,7 @@
+/.idea
+/api/__pycache__
+/api/piece/__pycache__
+/tests
+/game.db
+/venv
+/__pycache__

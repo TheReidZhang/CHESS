@@ -1,10 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-/.idea
-/api/__pycache__
-/chess/__pycache__
-/chess/piece/__pycache__
-/chess_ai/__pycache__
-/venv
-/api/game.db
-/tests/game.db
+/.pytest_cache
+game.db
+.coverage
+.idea

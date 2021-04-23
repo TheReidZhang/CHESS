@@ -1,0 +1,11 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+/.idea
+/api/__pycache__
+/api/piece/__pycache__
+/tests/.pytest_cache
+/tests/game.db
+/game.db
+/venv
+/__pycache__
+/tests/__pycache__
