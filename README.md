@@ -10,7 +10,7 @@
     
     docker-compose up -d
 
-4. Go to http://localhost:3000 to play the game
+4.Go to http://localhost:3000 to play the game
 
 # How to play the ChessGame
 ## Sign-in Page
