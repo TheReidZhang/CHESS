@@ -3,6 +3,9 @@ from api.piece.coordinate import Coordinate
 
 
 class Pawn(PieceInterface):
+    """
+    Piece Pawn
+    """
     def en_passant(self, attack_col: int, row: int, col: int) -> bool:
         """
         Check if en passant is available for the capturing pawn at Coordinate(row, col)

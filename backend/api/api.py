@@ -7,10 +7,15 @@ from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, 
 
 
 class ChessAPI:
+    """
+    Requests received from the flask server will be sent to ChessAPI and ChessAPI will call appropriate functions
+    in ChessGame as well as maintain different game sessions.
+    """
     def __init__(self, db_url="init"):
         """
         Set up database using db_url. Connect to the database, fetch data and create dict sessions where key is
         session_id and value is chess (game instance, username).
+        :param db_url:
         """
         if db_url == "init":
             db_url = 'postgresql+psycopg2://postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432'
@@ -81,6 +86,8 @@ class ChessAPI:
     def create_game(self, username: str, mode: str) -> dict:
         """
         Create a new chess game in put it in the dictionary, store the data in the database.
+        :param username:
+        :param mode:
         :return: A dict where only has one key "session_id"
         """
         session_id = self.generate_unique_session_id()
@@ -104,6 +111,7 @@ class ChessAPI:
     def resume_game(self, username: str) -> dict:
         """
         Get all on-going unfinished sessions and their start time and last update time.
+        :param username:
         :return: A dict which has key "resume_list" and value as a list of dict storing session id,
         start time, last update and mode
         """
@@ -127,6 +135,7 @@ class ChessAPI:
     def replay_game(self, username: str) -> dict:
         """
         Get all sessions that could be replayed
+        :param username:
         :return: A dict which has key "replay_list" and value as a list of dict storing session id,
         start time, last update and mode
         """
@@ -149,8 +158,8 @@ class ChessAPI:
     def get_info(self, request: dict, username: str) -> dict:
         """
         Get the game info of a certain game.
-        :param username: logged in user
         :param request: A dict with one key "session_id"
+        :param username: logged in user
         :return: A dict with key "fen", "status", "history", "turn" and "mode" and corresponding values
         """
         session_id = request["session_id"]
@@ -166,8 +175,8 @@ class ChessAPI:
     def update_game(self, request: dict, username: str) -> dict:
         """
         Update a certain game from source to target, and promotion role if occurred.
-        :param username: logged in user
         :param request: A dict including session id, source coordinate, target coordinate, and promotion role.
+        :param username: logged in user
         :return: A dict including info about update validation, whether being checked, game status and turn color.
         """
         session_id = request["session_id"]
@@ -289,6 +298,7 @@ class ChessAPI:
     def get_user_info(self, username: str) -> dict:
         """
         Get information associated with the logged in user
+        :param username:
         :return: A dict with key "username", "total_hours", "valid" and corresponding values
         """
         conn = self.engine.connect()
@@ -300,6 +310,8 @@ class ChessAPI:
     def undo(self, username: str, session_id: int) -> dict:
         """
         Undo one step in the game, will delete history in both game() and database table
+        :param username:
+        :param session_id:
         :return: A dict with information of the game after undo
         """
         if self.sessions[session_id][1] == username:
@@ -328,6 +340,9 @@ class ChessAPI:
     def replay(self, username: str, session_id: int, step: int) -> dict:
         """
         Get information of certain game after certain step
+        :param username:
+        :param session_id:
+        :param step:
         :return: A dict with key "fen", "history" and "valid" with corresponding values
         """
         if self.sessions[session_id][1] == username:

@@ -10,6 +10,9 @@ from api.piece.piece_interface import Color, PieceInterface
 
 
 class ChessGame:
+    """
+    ChessGame is the workhorse of our app, it maintains the status of a ChessGame.
+    """
     def __init__(self, fen="start"):
         """
         Initial game default values.
@@ -77,7 +80,7 @@ class ChessGame:
         While checkmate, each current turn piece available movements which can release the checkmate.
         :param coordinate: piece position
         :return: A dictionary with key "moves", and value is a array list which includes the available movements while
-                 checkmate.
+        checkmate.
         """
         row, col = coordinate.get_tuple()
         piece = self.board[row][col]
@@ -95,7 +98,7 @@ class ChessGame:
         :param tar: the position of the piece move to
         :param role: promotion role while the pawn reaches the eighth rank to be replaced by.
         :return: A boolean value which show the movement is valid or not. If the movement is valid, all game parameters
-                 are updated, otherwise no change.
+        are updated, otherwise no change.
         """
 
         # If the game status is not 'Continue", then return False and nothing updated.

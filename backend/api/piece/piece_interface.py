@@ -8,6 +8,9 @@ class Color(Enum):
 
 
 class PieceInterface:
+    """
+    Interface that a piece should implement
+    """
     def __init__(self, game: 'ChessGame', color: Color):
         """
         :param game: a chess game instance

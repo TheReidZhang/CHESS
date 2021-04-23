@@ -1,4 +1,7 @@
 class Coordinate:
+    """
+    Represents the location of pieces on board
+    """
     def __init__(self, x: int, y: int):
         """
         x:0,y:0 is the bottom left corner of the board
