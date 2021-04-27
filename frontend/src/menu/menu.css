@@ -12,6 +12,7 @@ Style the root element to showcase the component in this demo. This is just for 
   background-color: rgb(91, 100, 111);
   position:relative;
   margin: auto;
+  overflow: auto;
 }
 
 div.center-container {
