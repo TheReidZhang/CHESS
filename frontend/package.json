@@ -1,5 +1,6 @@
 {
   "name": "chess_ui",
+  "homepage": ".",
   "proxy": "http://backend:5000/",
   "version": "0.1.0",
   "private": true,
@@ -9,6 +10,11 @@
     "@testing-library/user-event": "^12.8.3",
     "bootstrap": "^4.6.0",
     "chessboardjsx": "^2.4.2",
+    "connect-pg-simple": "^6.2.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "node-fetch": "^2.6.1",
     "react": "^17.0.2",
     "react-bootstrap": "^1.5.2",
     "react-dom": "^17.0.2",

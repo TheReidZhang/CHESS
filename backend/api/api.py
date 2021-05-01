@@ -155,14 +155,14 @@ class ChessAPI:
         conn.close()
         return {"replay_list": lst, "valid": True}
 
-    def get_info(self, request: dict, username: str) -> dict:
+    def get_info(self, request: dict) -> dict:
         """
         Get the game info of a certain game.
-        :param request: A dict with one key "session_id"
-        :param username: logged in user
+        :param request: A dict with one key "session_id" and "user"
         :return: A dict with key "fen", "status", "history", "turn" and "mode" and corresponding values
         """
         session_id = request["session_id"]
+        username = request["user"]
         if self.sessions[session_id][1] == username:
             game = self.sessions[session_id][0]
             fen = game.get_fen()
@@ -172,14 +172,15 @@ class ChessAPI:
             history = game.get_game_history()
             return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True, "mode": mode}
 
-    def update_game(self, request: dict, username: str) -> dict:
+    def update_game(self, request: dict) -> dict:
         """
         Update a certain game from source to target, and promotion role if occurred.
-        :param request: A dict including session id, source coordinate, target coordinate, and promotion role.
-        :param username: logged in user
+        :param request: A dict including session id, source coordinate, target coordinate,current logged in user and
+        promotion role.
         :return: A dict including info about update validation, whether being checked, game status and turn color.
         """
         session_id = request["session_id"]
+        username = request["user"]
         if self.sessions[session_id][1] == username:
             src = request["src"]
             tar = request["tar"]

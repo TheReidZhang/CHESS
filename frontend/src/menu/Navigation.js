@@ -11,22 +11,26 @@ function Navigation(props) {
     const [userName, setUserName] = useState("");
     const [totalHours, setTotalHours] = useState(0);
     useEffect(() => {
-        (async function runEffect() {
-            const response = await fetch('/user');
-            const json = await response.json();
+        fetch('/user')
+        .then((response) => response.json())
+        .then((json) => {
             if (json["valid"]) {
                 props.setIsLoggedIn(true);
-                setUserName(json["username"]);
-                setTotalHours(json["total_hours"]);
+                 setUserName(json["username"]);
+                 setTotalHours(json["total_hours"]);
             }
-        })();
+        });
     }, []);
 
     const history = useHistory();
-    const logout = async() => {
-        await fetch('/logout');
-        history.push("/");
-        history.go(0);
+    const logout = () => {
+        fetch('/logout')
+        .then((response) => response.json())
+        .then((json) => {
+            alert(json["msg"]);
+            history.push("/");
+            history.go(0);
+        });
     }
 
     const renderButton = () => {
