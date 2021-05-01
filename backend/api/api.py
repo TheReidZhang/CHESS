@@ -163,7 +163,7 @@ class ChessAPI:
         """
         session_id = request["session_id"]
         username = request["user"]
-        if self.sessions[session_id][1] == username:
+        if session_id in self.sessions and self.sessions[session_id][1] == username:
             game = self.sessions[session_id][0]
             fen = game.get_fen()
             status = game.check_game_status()
@@ -171,6 +171,7 @@ class ChessAPI:
             mode = self.modes[session_id]
             history = game.get_game_history()
             return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True, "mode": mode}
+        return {"valid": False}
 
     def update_game(self, request: dict) -> dict:
         """
@@ -346,7 +347,7 @@ class ChessAPI:
         :param step:
         :return: A dict with key "fen", "history" and "valid" with corresponding values
         """
-        if self.sessions[session_id][1] == username:
+        if session_id in self.sessions and self.sessions[session_id][1] == username:
             if step == 0:
                 return {"fen": "start", "history": {}, "valid": True}
             conn = self.engine.connect()
@@ -357,5 +358,7 @@ class ChessAPI:
                 result = result[0]
                 history = {"src": result["src"],
                            "tar": result["tar"]}
-                return {"fen": result["fen"], "history": history, "valid": True}
-        return {"valid": False}
+                return {"fen": result["fen"], "history": history, "valid": True, "validSession": True}
+            else:
+                return {"valid": False, "validSession": True}
+        return {"valid": False, "validSession": False}

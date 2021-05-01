@@ -4,27 +4,29 @@ const cors = require("cors");
 const fetch = require("node-fetch");
 const session = require("express-session");
 const app = express();
+const sessionStore = new (require("connect-pg-simple")(session))({
+  conString:
+    "postgres:postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432",
+});
 app.use(
   session({
     secret: "IMustSayItsWorth",
     resave: false,
     saveUninitialized: false,
-    store: new (require("connect-pg-simple")(session))({
-      conString:
-        "postgres:postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432",
-    }),
+    store: sessionStore,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
   })
 );
 
-// const proxy = "http://0.0.0.0:5000";
-const proxy = "http://backend:5000";
+const proxy = "http://0.0.0.0:5000";
+// const proxy = "http://backend:5000";
 app.use(cors());
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "build/")));
 
 app.get("/user", function (req, res) {
+  console.log();
   if (req.session.user) {
     fetch(proxy + "/user", {
       method: "POST",
@@ -148,7 +150,7 @@ app.get("/chess/:session_id/:coordinate", function (req, res) {
   if (!req.session.user) {
     res.json({ valid: false });
   } else {
-    const {session_id, coordinate} = req.params;
+    const { session_id, coordinate } = req.params;
     fetch(proxy + "/chess/" + session_id + "/" + coordinate, {
       headers: { "Content-Type": "application/json" },
       method: "POST",
@@ -161,7 +163,6 @@ app.get("/chess/:session_id/:coordinate", function (req, res) {
       .then((json) => res.json(json));
   }
 });
-
 
 app.get("/replays", function (req, res) {
   if (!req.session.user) {
@@ -182,7 +183,7 @@ app.get("/replays", function (req, res) {
 
 app.post("/replay", function (req, res) {
   if (!req.session.user) {
-    res.json({ valid: false });
+    res.json({ valid: false, validSession: false });
   } else {
     fetch(proxy + "/replay", {
       headers: { "Content-Type": "application/json" },
@@ -190,7 +191,7 @@ app.post("/replay", function (req, res) {
       credentials: "include",
       body: JSON.stringify({
         ...req.body,
-        ...{user: req.session.user}
+        ...{ user: req.session.user },
       }),
     })
       .then((response) => response.json())
@@ -208,14 +209,13 @@ app.post("/undo", function (req, res) {
       credentials: "include",
       body: JSON.stringify({
         ...req.body,
-        ...{user: req.session.user}
+        ...{ user: req.session.user },
       }),
     })
       .then((response) => response.json())
       .then((json) => res.json(json));
   }
 });
-
 
 app.post("/signup", function (req, res) {
   if (req.session.user) {
@@ -226,7 +226,7 @@ app.post("/signup", function (req, res) {
       method: "POST",
       credentials: "include",
       body: JSON.stringify({
-        ...req.body
+        ...req.body,
       }),
     })
       .then((response) => response.json())
