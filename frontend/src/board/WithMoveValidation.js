@@ -7,9 +7,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Info from "./Info";
 import PromotionMenu from "./PromotionMenu";
 import GameOption from "./GameOption";
+import { useParams, withRouter } from "react-router-dom";
 
 class ChessBoard extends Component {
-  static propTypes = { children: PropTypes.func };
+  static propTypes = {
+    children: PropTypes.func,
+    history: PropTypes.object.isRequired,
+  };
 
   constructor(props) {
     super(props);
@@ -67,6 +71,10 @@ class ChessBoard extends Component {
               }));
             }
           );
+        } else {
+          alert("Log in first or this session does not belong to you!");
+          const { history } = this.props;
+          history.push("/");
         }
       });
   };
@@ -147,38 +155,43 @@ class ChessBoard extends Component {
             })
               .then((response) => response.json())
               .then((json) => {
-                const fen = json["fen"];
-                const status = json["status"];
-                const turn = json["turn"];
-                const history = json["history"];
-                this.setState({
-                  fen: fen,
-                  pieceSquare: "",
-                  status: status,
-                  turn: turn,
-                  history: history,
-                  validMoves: [],
-                });
+                if (json["valid"]) {
+                  const fen = json["fen"];
+                  const status = json["status"];
+                  const turn = json["turn"];
+                  const history = json["history"];
+                  this.setState({
+                    fen: fen,
+                    pieceSquare: "",
+                    status: status,
+                    turn: turn,
+                    history: history,
+                    validMoves: [],
+                  });
+                } else {
+                  alert("Log in first or this session does not belong to you!");
+                  const { history } = this.props;
+                  history.push("/");
+                }
 
                 this.setState(({ validMoves, history }) => ({
                   squareStyles: squareStyling({ validMoves, history }),
                 }));
-
-                const update_is_being_checked = json["is_being_checked"];
-                if (update_is_being_checked) {
-                  setTimeout(function () {
-                    alert("check!");
-                  }, 0);
-                }
-                const update_game_status = json["status"];
-                if (update_game_status !== "Continue") {
-                  setTimeout(function () {
-                    alert(">");
-                  }, 0);
-                }
-
-                return;
               });
+            const update_is_being_checked = json["is_being_checked"];
+            if (update_is_being_checked) {
+              setTimeout(function () {
+                alert("check!");
+              }, 0);
+            }
+            const update_game_status = json["game_status"];
+            if (update_game_status !== "Continue") {
+              setTimeout(function () {
+                alert(update_game_status);
+              }, 0);
+            }
+
+            return;
           }
         });
     }
@@ -216,10 +229,13 @@ class ChessBoard extends Component {
   }
 }
 
+ChessBoard = withRouter(ChessBoard);
+
 export default function WithMoveValidation(props) {
+  let { session_id } = useParams();
   return (
     <div>
-      <ChessBoard session_id={props.match.params.session_id}>
+      <ChessBoard session_id={session_id}>
         {({
           turn,
           status,

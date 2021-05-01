@@ -5,6 +5,7 @@ import Row from "react-bootstrap/Row";
 import Container from "react-bootstrap/Container";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
+import { useParams, withRouter } from "react-router-dom";
 
 class Replay extends Component {
   static propTypes = { children: PropTypes.func };
@@ -44,8 +45,12 @@ class Replay extends Component {
               squareStyles: squareStyling({ validMoves, history }),
             }));
           });
-        } else {
+        } else if (json["validSession"]) {
           this.setState({ step: this.state.step - 1 });
+        } else {
+          alert("Log in first or this session does not belong to you!");
+          const { history } = this.props;
+          history.push("/");
         }
       });
   };
@@ -54,7 +59,9 @@ class Replay extends Component {
     let tmp = this.state.step + val;
     if (tmp < 0) tmp = 0;
     if (tmp !== this.state.step) {
-      this.setState({ step: tmp }, () => {this.getInfo();});
+      this.setState({ step: tmp }, () => {
+        this.getInfo();
+      });
     }
   };
 
@@ -70,10 +77,13 @@ class Replay extends Component {
   }
 }
 
+Replay = withRouter(Replay);
+
 export default function Replays(props) {
+  let { session_id } = useParams();
   return (
     <div>
-      <Replay session_id={props.match.params.session_id}>
+      <Replay session_id={session_id}>
         {({ position, undo, squareStyles, triggerEffect }) => (
           <Container fluid style={{ width: "100vw" }}>
             <Row className="justify-content-center mt-3">
