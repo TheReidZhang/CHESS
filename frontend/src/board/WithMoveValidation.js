@@ -8,7 +8,6 @@ import Info from "./Info";
 import PromotionMenu from "./PromotionMenu";
 import GameOption from "./GameOption";
 import { useParams, withRouter } from "react-router-dom";
-
 class ChessBoard extends Component {
   static propTypes = {
     children: PropTypes.func,
@@ -17,6 +16,8 @@ class ChessBoard extends Component {
 
   constructor(props) {
     super(props);
+    this.audio = props.audio;
+    console.log(this.audio);
     this.state = {
       session_id: parseInt(props.session_id),
       fen: "start",
@@ -125,14 +126,17 @@ class ChessBoard extends Component {
         }),
       });
       const json = await response.json();
-      if (json["valid"]) await this.getInfo();
-      else {
+      if (json["valid"]) {
+        this.audio.play();
+        await this.getInfo();
+      } else if (!json["validSession"]) {
         alert("Log in first!");
         const { history } = this.props;
         history.push("/");
         history.go(0);
       }
-      if (i === 0 && ed === 1) await this.wait(500);
+
+      if (i === 0 && ed === 1) await this.wait(1000);
     }
   };
 
@@ -156,6 +160,7 @@ class ChessBoard extends Component {
         .then((response) => response.json())
         .then((json) => {
           if (json["valid"]) {
+            this.audio.play();
             fetch("/chess/info", {
               headers: { "Content-Type": "application/json" },
               method: "POST",
@@ -261,7 +266,7 @@ export default function WithMoveValidation(props) {
   let { session_id } = useParams();
   return (
     <div>
-      <ChessBoard session_id={session_id}>
+      <ChessBoard session_id={session_id} audio={props.audio}>
         {({
           turn,
           status,

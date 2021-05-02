@@ -38,7 +38,8 @@ const removeMultipleLogin = async (username) => {
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "build/")));
+app.use(express.static(path.join(__dirname, "build")));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/user", function (req, res) {
   if (req.session.user) {
@@ -218,7 +219,7 @@ app.post("/replay", function (req, res) {
 
 app.post("/undo", function (req, res) {
   if (!req.session.user) {
-    res.json({ valid: false });
+    res.json({ valid: false, validSession: false});
   } else {
     fetch(proxy + "/undo", {
       headers: { "Content-Type": "application/json" },
