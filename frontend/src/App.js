@@ -6,24 +6,36 @@ import React, { useState } from "react";
 import WithMoveValidation from "./board/WithMoveValidation";
 import MainMenu from "./menu/MainMenu";
 import Container from "react-bootstrap/Container";
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  useHistory,
-} from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import Replays from "./board/Replay";
+import useSound from "use-sound";
+import boopSfx from "./BodyFunk.mp3";
 
 function App() {
-  const history = useHistory();
   const [showLogin, setShowLogin] = useState(false);
   const handleLoginClose = () => setShowLogin(false);
   const handleLoginShow = () => setShowLogin(true);
-
   const [showSignup, setShowSignup] = useState(false);
   const handleSignupClose = () => setShowSignup(false);
   const handleSignupShow = () => setShowSignup(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  let audio = new Audio("/move.wav");
+
+  const BoopButton = () => {
+    const [play, { stop, isPlaying }] = useSound(boopSfx, { volume: 0.2 });
+    return (
+      <button
+        onClick={() => {
+          isPlaying ? stop() : play();
+        }}
+      >
+        <span role="img" aria-label="trumpet">
+          🎺
+        </span>
+      </button>
+    );
+  };
 
   const renderMenu = () => {
     if (isLoggedIn) {
@@ -107,6 +119,7 @@ function App() {
           handleLoginShow={handleLoginShow}
           isLoggedIn={isLoggedIn}
           setIsLoggedIn={setIsLoggedIn}
+          boopButton={BoopButton()}
         />
         <Login
           showLogin={showLogin}
@@ -116,10 +129,10 @@ function App() {
         <Signup showSignup={showSignup} handleSignupClose={handleSignupClose} />
         <Switch>
           <Route path="/chess/:session_id">
-            <WithMoveValidation />
+            <WithMoveValidation audio={audio} />
           </Route>
           <Route path="/replay/:session_id">
-            <Replays />
+            <Replays audio={audio} />
           </Route>
           <Route path="/" exact>
             <div className="center-container">{renderMenu()}</div>

@@ -11,6 +11,7 @@ class Replay extends Component {
   static propTypes = { children: PropTypes.func };
   constructor(props) {
     super(props);
+    this.audio = props.audio;
     this.state = {
       session_id: parseInt(props.session_id),
       fen: "start",
@@ -23,10 +24,10 @@ class Replay extends Component {
   }
 
   componentDidMount = () => {
-    this.getInfo();
+    this.getInfo(true);
   };
 
-  getInfo = () => {
+  getInfo = (mount) => {
     fetch("/replay", {
       headers: { "Content-Type": "application/json" },
       method: "POST",
@@ -39,6 +40,7 @@ class Replay extends Component {
       .then((json) => {
         if (json["valid"]) {
           const fen = json["fen"];
+          if (!mount) this.audio.play();
           const history = json["history"];
           this.setState({ fen: fen, history: [history] }, () => {
             this.setState(({ validMoves, history }) => ({
@@ -61,7 +63,7 @@ class Replay extends Component {
     if (tmp < 0) tmp = 0;
     if (tmp !== this.state.step) {
       this.setState({ step: tmp }, () => {
-        this.getInfo();
+        this.getInfo(false);
       });
     }
   };
@@ -84,7 +86,7 @@ export default function Replays(props) {
   let { session_id } = useParams();
   return (
     <div>
-      <Replay session_id={session_id}>
+      <Replay session_id={session_id} audio={props.audio}>
         {({ position, undo, squareStyles, triggerEffect }) => (
           <Container fluid style={{ width: "100vw" }}>
             <Row className="justify-content-center mt-3">

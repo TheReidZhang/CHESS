@@ -103,6 +103,7 @@ function Navigation(props) {
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto" />
         <Nav className="mr-sm-2">{renderButton()}</Nav>
+        <Nav className="mr-sm-2">{props.boopButton}</Nav>
       </Navbar.Collapse>
     </Navbar>
   );

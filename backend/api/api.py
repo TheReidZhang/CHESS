@@ -317,12 +317,14 @@ class ChessAPI:
         :param session_id:
         :return: A dict with information of the game after undo
         """
-        if self.sessions[session_id][1] == username:
+        if session_id in self.sessions and self.sessions[session_id][1] == username:
             game = self.sessions[session_id][0]
             game.undo()
             conn = self.engine.connect()
             steps = conn.execute(self.history.select().where(self.history.c.session_id == session_id).
                                  order_by(self.history.c.step)).all()
+            if len(steps) == 0:
+                return {"valid": False, "validSession": True}
             conn.execute(self.history.delete().where(
                 and_(self.history.c.session_id == session_id,
                      self.history.c.step == len(steps))))
@@ -337,8 +339,8 @@ class ChessAPI:
             conn.close()
             turn = game.get_turn()
             history = game.get_game_history()
-            return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True}
-        return {"valid": False}
+            return {"fen": fen, "status": status, "turn": turn, "history": history, "valid": True, "validSession": True}
+        return {"valid": False, "validSession": False}
 
     def replay(self, username: str, session_id: int, step: int) -> dict:
         """
