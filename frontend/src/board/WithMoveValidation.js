@@ -37,47 +37,45 @@ class ChessBoard extends Component {
     };
   }
 
-  componentDidMount = () => {
-    this.getInfo();
+  componentDidMount = async () => {
+    await this.getInfo();
   };
 
-  getInfo = () => {
-    fetch("/chess/info", {
+  getInfo = async () => {
+    const response = await fetch("/chess/info", {
       headers: { "Content-Type": "application/json" },
       method: "POST",
       body: JSON.stringify({
         session_id: this.state.session_id,
       }),
-    })
-      .then((response) => response.json())
-      .then((json) => {
-        if (json["valid"]) {
-          const fen = json["fen"];
-          const status = json["status"];
-          const turn = json["turn"];
-          const history = json["history"];
-          const mode = json["mode"];
-          this.setState(
-            {
-              fen: fen,
-              status: status,
-              turn: turn,
-              history: history,
-              mode: mode,
-            },
-            () => {
-              this.setState(({ validMoves, history }) => ({
-                squareStyles: squareStyling({ validMoves, history }),
-              }));
-            }
-          );
-        } else {
-          alert("Log in first or this session does not belong to you!");
-          const { history } = this.props;
-          history.push("/");
-          history.go(".");
+    });
+    const json = await response.json();
+    if (json["valid"]) {
+      const fen = json["fen"];
+      const status = json["status"];
+      const turn = json["turn"];
+      const history = json["history"];
+      const mode = json["mode"];
+      this.setState(
+        {
+          fen: fen,
+          status: status,
+          turn: turn,
+          history: history,
+          mode: mode,
+        },
+        () => {
+          this.setState(({ validMoves, history }) => ({
+            squareStyles: squareStyling({ validMoves, history }),
+          }));
         }
-      });
+      );
+    } else {
+      alert("Log in first or this session does not belong to you!");
+      const { history } = this.props;
+      history.push("/");
+      history.go(".");
+    }
   };
 
   // show possible moves
@@ -107,29 +105,34 @@ class ChessBoard extends Component {
     }));
   };
 
-  takeback = () => {
+  wait = (timeout) => {
+    return new Promise((resolve) => {
+      setTimeout(resolve, timeout);
+    });
+  };
+
+  takeback = async () => {
     let ed = 0;
     if (this.state.mode !== "pvp") {
       ed = 1;
     }
-    for (var i = 0; i <= ed; i++) {
-      fetch("/undo", {
+    for (let i = 0; i <= ed; i++) {
+      const response = await fetch("/undo", {
         headers: { "Content-Type": "application/json" },
         method: "POST",
         body: JSON.stringify({
           session_id: this.state.session_id,
         }),
-      })
-        .then((response) => response.json())
-        .then((json) => {
-          if (json["valid"]) this.getInfo();
-          else {
-            alert("Log in first!");
-            const { history } = this.props;
-            history.push("/");
-            history.go(0);
-          }
-        });
+      });
+      const json = await response.json();
+      if (json["valid"]) await this.getInfo();
+      else {
+        alert("Log in first!");
+        const { history } = this.props;
+        history.push("/");
+        history.go(0);
+      }
+      if (i === 0 && ed === 1) await this.wait(500);
     }
   };
 
