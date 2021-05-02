@@ -28,9 +28,15 @@ function MainMenu() {
     })
       .then((response) => response.json())
       .then((json) => {
-        const session = json["session_id"];
-        const ret = "/chess/" + session;
-        history.push(ret);
+        if (json["valid"]) {
+          const session = json["session_id"];
+          const ret = "/chess/" + session;
+          history.push(ret);
+        } else {
+          alert("Log in first!");
+          history.push("/");
+          history.go(0);
+        }
       });
   };
 
@@ -38,21 +44,27 @@ function MainMenu() {
     fetch("/resume")
       .then((response) => response.json())
       .then((json) => {
-        const lst = json["resume_list"];
-        let ret = [];
-        for (let i = 0; i < lst.length; i++) {
-          ret.push(
-            <ModalBtn
-              key={lst[i]["session_id"]}
-              session_id={lst[i]["session_id"]}
-              start_time={lst[i]["start_time"]}
-              last_update={lst[i]["last_update"]}
-              mode={lst[i]["mode"]}
-            />
-          );
+        if (json["valid"]) {
+          const lst = json["resume_list"];
+          let ret = [];
+          for (let i = 0; i < lst.length; i++) {
+            ret.push(
+              <ModalBtn
+                key={lst[i]["session_id"]}
+                session_id={lst[i]["session_id"]}
+                start_time={lst[i]["start_time"]}
+                last_update={lst[i]["last_update"]}
+                mode={lst[i]["mode"]}
+              />
+            );
+          }
+          setResumeList(ret);
+          setResumeIsOpen(true);
+        } else {
+          alert("Log in first!");
+          history.push("/");
+          history.go(0);
         }
-        setResumeList(ret);
-        setResumeIsOpen(true);
       });
   };
 
@@ -60,21 +72,27 @@ function MainMenu() {
     fetch("/replays")
       .then((response) => response.json())
       .then((json) => {
-        const lst = json["replay_list"];
-        let ret = [];
-        for (let i = 0; i < lst.length; i++) {
-          ret.push(
-            <ModalBtn2
-              key={lst[i]["session_id"]}
-              session_id={lst[i]["session_id"]}
-              start_time={lst[i]["start_time"]}
-              last_update={lst[i]["last_update"]}
-              mode={lst[i]["mode"]}
-            />
-          );
+        if (json["valid"]) {
+          const lst = json["replay_list"];
+          let ret = [];
+          for (let i = 0; i < lst.length; i++) {
+            ret.push(
+              <ModalBtn2
+                key={lst[i]["session_id"]}
+                session_id={lst[i]["session_id"]}
+                start_time={lst[i]["start_time"]}
+                last_update={lst[i]["last_update"]}
+                mode={lst[i]["mode"]}
+              />
+            );
+          }
+          setReplayList(ret);
+          setReplayIsOpen(true);
+        } else {
+          alert("Log in first!");
+          history.push("/");
+          history.go(0);
         }
-        setReplayList(ret);
-        setReplayIsOpen(true);
       });
   };
 

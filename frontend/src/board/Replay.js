@@ -51,6 +51,7 @@ class Replay extends Component {
           alert("Log in first or this session does not belong to you!");
           const { history } = this.props;
           history.push("/");
+          history.go(0);
         }
       });
   };

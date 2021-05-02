@@ -4,29 +4,43 @@ const cors = require("cors");
 const fetch = require("node-fetch");
 const session = require("express-session");
 const app = express();
-const sessionStore = new (require("connect-pg-simple")(session))({
-  conString:
-    "postgres:postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432",
-});
+const { Pool } = require("pg");
+const connectionString =
+  "postgres:postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432";
 app.use(
   session({
     secret: "IMustSayItsWorth",
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
+    store: new (require("connect-pg-simple")(session))({
+      conString: connectionString,
+    }),
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
   })
 );
 
-const proxy = "http://0.0.0.0:5000";
-// const proxy = "http://backend:5000";
+const proxy = process.env.BACKEND_PROXY || "http://0.0.0.0:5000";
+
+const pool = new Pool({
+  connectionString,
+});
+
+const removeMultipleLogin = async (username) => {
+  const client = await pool.connect();
+  try {
+    await client.query("delete from session where sess->'user'#>> '{}'= $1;", [
+      username,
+    ]);
+  } finally {
+    client.release();
+  }
+};
+
 app.use(cors());
 app.use(express.json());
-
 app.use(express.static(path.join(__dirname, "build/")));
 
 app.get("/user", function (req, res) {
-  console.log();
   if (req.session.user) {
     fetch(proxy + "/user", {
       method: "POST",
@@ -67,8 +81,11 @@ app.post("/login", function (req, res) {
       }),
     })
       .then((response) => response.json())
-      .then((json) => {
-        if (json["valid"]) req.session.user = username;
+      .then(async (json) => {
+        if (json["valid"]) {
+          await removeMultipleLogin(username);
+          req.session.user = username;
+        }
         res.json(json);
       });
   }
@@ -130,7 +147,7 @@ app.post("/chess/new", function (req, res) {
 
 app.post("/chess/update", function (req, res) {
   if (!req.session.user) {
-    res.json({ valid: false });
+    res.json({ valid: false, validSession: false });
   } else {
     fetch(proxy + "/chess/update", {
       headers: { "Content-Type": "application/json" },
