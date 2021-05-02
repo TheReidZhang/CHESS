@@ -75,6 +75,7 @@ class ChessBoard extends Component {
           alert("Log in first or this session does not belong to you!");
           const { history } = this.props;
           history.push("/");
+          history.go(".");
         }
       });
   };
@@ -121,7 +122,13 @@ class ChessBoard extends Component {
       })
         .then((response) => response.json())
         .then((json) => {
-          this.getInfo();
+          if (json["valid"]) this.getInfo();
+          else {
+            alert("Log in first!");
+            const { history } = this.props;
+            history.push("/");
+            history.go(0);
+          }
         });
     }
   };
@@ -172,6 +179,7 @@ class ChessBoard extends Component {
                   alert("Log in first or this session does not belong to you!");
                   const { history } = this.props;
                   history.push("/");
+                  history.go(0);
                 }
 
                 this.setState(({ validMoves, history }) => ({
@@ -192,6 +200,11 @@ class ChessBoard extends Component {
             }
 
             return;
+          } else if (!json["validSession"]) {
+            alert("Log in first!");
+            const { history } = this.props;
+            history.push("/");
+            history.go(0);
           }
         });
     }
@@ -202,13 +215,23 @@ class ChessBoard extends Component {
     fetch("/chess/" + this.state.session_id + "/" + square)
       .then((response) => response.json())
       .then((json) => {
-        const moves = json["moves"];
-        const squaresToHighlight = [];
-        for (var i = 0; i < moves.length; i++) {
-          squaresToHighlight.push(moves[i]);
+        if (json["valid"]) {
+          const moves = json["moves"];
+          const squaresToHighlight = [];
+          for (var i = 0; i < moves.length; i++) {
+            squaresToHighlight.push(moves[i]);
+          }
+          this.setState({
+            pieceSquare: square,
+            validMoves: squaresToHighlight,
+          });
+          this.highlightSquare(square, squaresToHighlight);
+        } else {
+          alert("Log in first!");
+          const { history } = this.props;
+          history.push("/");
+          history.go(0);
         }
-        this.setState({ pieceSquare: square, validMoves: squaresToHighlight });
-        this.highlightSquare(square, squaresToHighlight);
       });
   };
 

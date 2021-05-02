@@ -210,8 +210,8 @@ class ChessAPI:
                 is_being_checked = game.is_being_checked()
                 status = game.check_game_status()
                 turn = game.get_turn()
-            return {"valid": valid, "is_being_checked": is_being_checked, "game_status": status, "turn": turn}
-        return {"valid": False}
+            return {"valid": valid, "is_being_checked": is_being_checked, "game_status": status, "turn": turn, "validSession": True}
+        return {"valid": False, "validSession": False}
 
     def get_checked_moves(self, request: dict, username: str) -> dict:
         """
@@ -221,13 +221,14 @@ class ChessAPI:
         :return: A dict which including all valid moves which won't let you be checked in certain game for a coordinate.
         """
         session_id = request["session_id"]
-        if self.sessions[session_id][1] == username:
+        if session_id in self.sessions and self.sessions[session_id][1] == username:
             coordinate = request["coordinate"]
             coordinate = Coordinate.decode(coordinate)
             game = self.sessions[session_id][0]
             ret = game.get_checked_moves(coordinate)
             ret["valid"] = True
             return ret
+        return {"valid": False}
 
     def update_history(self, session_id: int) -> None:
         """
