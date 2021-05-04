@@ -3,7 +3,7 @@ from api.piece.knight import Knight
 from api.piece.king import King
 from api.chess_game import ChessGame
 from api.piece.piece_interface import Color
-from api.piece.coordinate import Coordinate
+from api.piece.utility import Coordinate
 
 
 class TestRook(unittest.TestCase):

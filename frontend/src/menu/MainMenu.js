@@ -133,6 +133,20 @@ function MainMenu() {
                     <Button
                       variant="outline-dark"
                       size="md"
+                      onClick={() => new_game("advanced")}
+                    >
+                      Advanced
+                    </Button>
+                  </div>
+                </Col>
+              </Row>
+
+              <Row className="align-items-center mb-3">
+                <Col>
+                  <div style={{ display: "flex", justifyContent: "center" }}>
+                    <Button
+                      variant="outline-dark"
+                      size="md"
                       onClick={() => new_game("pvp")}
                     >
                       PvP

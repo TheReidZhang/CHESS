@@ -1,6 +1,7 @@
 from api.chess_game import ChessGame
-from api.piece.coordinate import Coordinate
 from api.simple_ai import SimpleAI
+from api.piece.utility import Utility
+from api.advanced_ai import AdvancedAI
 import random
 import datetime
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_
@@ -186,8 +187,8 @@ class ChessAPI:
             src = request["src"]
             tar = request["tar"]
             role = request["role"]
-            src_coord = Coordinate.decode(src)
-            tar_coord = Coordinate.decode(tar)
+            src_coord = Utility.decode(src)
+            tar_coord = Utility.decode(tar)
             game = self.sessions[session_id][0]
 
             valid = game.update(src_coord, tar_coord, role)
@@ -199,10 +200,14 @@ class ChessAPI:
             turn = game.get_turn()
             # AI's turns
             if status == "Continue" and valid and self.modes[session_id] != "pvp":
-                ai = SimpleAI(game)
+                if self.modes[session_id] == 'easy':
+                    ai = SimpleAI(game)
+                elif self.modes[session_id] == 'advanced':
+                    ai = AdvancedAI(game)
+
                 src_row, src_col, tar_row, tar_col = ai.get_next_move()
-                src = Coordinate(src_row, src_col)
-                tar = Coordinate(tar_row, tar_col)
+                src = (src_row, src_col)
+                tar = (tar_row, tar_col)
                 valid = game.update(src, tar, "Queen")
                 if valid:
                     self.update_history(session_id)
@@ -223,7 +228,7 @@ class ChessAPI:
         session_id = request["session_id"]
         if session_id in self.sessions and self.sessions[session_id][1] == username:
             coordinate = request["coordinate"]
-            coordinate = Coordinate.decode(coordinate)
+            coordinate = Utility.decode(coordinate)
             game = self.sessions[session_id][0]
             ret = game.get_checked_moves(coordinate)
             ret["valid"] = True

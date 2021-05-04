@@ -2,7 +2,7 @@ import unittest
 from api.piece.rook import Rook
 from api.chess_game import ChessGame
 from api.piece.piece_interface import Color
-from api.piece.coordinate import Coordinate
+from api.piece.utility import Coordinate
 from api.piece.king import King
 
 

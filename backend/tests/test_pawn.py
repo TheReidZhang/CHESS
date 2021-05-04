@@ -1,7 +1,7 @@
 from api.piece.pawn import Pawn
 from api.piece.king import King
 from api.chess_game import ChessGame
-from api.piece.coordinate import Coordinate
+from api.piece.utility import Coordinate
 from api.piece.piece_interface import Color
 from unittest import TestCase
 
