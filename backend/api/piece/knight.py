@@ -1,5 +1,4 @@
 from api.piece.piece_interface import PieceInterface, Color
-from api.piece.coordinate import Coordinate
 
 
 class Knight(PieceInterface):
@@ -11,8 +10,7 @@ class Knight(PieceInterface):
         :return: a list of all available moves of the piece in order
         by directions (clockwise).
         """
-        coordinate = self.game.get_piece_coordinate(self)
-        row, col = coordinate.get_tuple()
+        row, col = self.x, self.y
         directions = [[2, 1],
                       [1, 2],
                       [-1, 2],
@@ -28,9 +26,12 @@ class Knight(PieceInterface):
             ret_col = col + direction[1]
             if not PieceInterface.is_valid_coord(ret_row, ret_col):
                 continue
-            tar_color = self.game.board[ret_row][ret_col].get_color()
+            tar_color = self.game.board[ret_row][ret_col].color
             if tar_color != self.color:
-                moves.append(Coordinate(ret_row, ret_col))
+                if tar_color != Color.EMPTY:
+                    moves.insert(0, (ret_row, ret_col))
+                else:
+                    moves.append((ret_row, ret_col))
         return moves
 
     def to_string(self) -> str:

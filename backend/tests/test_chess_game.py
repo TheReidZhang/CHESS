@@ -8,7 +8,7 @@ from api.piece.queen import Queen
 from api.piece.rook import Rook
 from api.piece.empty import Empty
 from api.piece.piece_interface import Color
-from api.piece.coordinate import Coordinate
+from api.piece.utility import Coordinate
 import random
 
 

@@ -1,4 +1,4 @@
-from api.piece.coordinate import Coordinate
+from api.piece.utility import Coordinate
 import unittest
 
 

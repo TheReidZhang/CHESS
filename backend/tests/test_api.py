@@ -1,5 +1,5 @@
 import unittest
-from api.piece.coordinate import Coordinate
+from api.piece.utility import Coordinate
 from api.api import ChessAPI
 import os
 

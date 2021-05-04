@@ -11,13 +11,19 @@ class PieceInterface:
     """
     Interface that a piece should implement
     """
-    def __init__(self, game: 'ChessGame', color: Color):
+    def __init__(self, game: 'ChessGame', color: Color, x: int, y: int):
         """
         :param game: a chess game instance
         :param color: indicate the color of the piece
         """
+        self.x = x
+        self.y = y
         self.game = game
         self.color = color
+
+    def update_coordinate(self, x: int, y: int):
+        self.x = x
+        self.y = y
 
     def get_moves(self) -> list:
         """
@@ -33,17 +39,11 @@ class PieceInterface:
         moves = self.get_moves()
         checked_moves = []
         if len(moves) > 0:
-            coordinate = self.game.get_piece_coordinate(self)
+            coordinate = self.x, self.y
             for move in moves:
                 if not self.game.is_being_checked_after_move(coordinate, move):
                     checked_moves.append(move)
         return {"moves": checked_moves}
-
-    def get_color(self) -> Color:
-        """
-        :return: the color of piece, Color.WHITE, Color.BLACK or Color.Empty.
-        """
-        return self.color
 
     @staticmethod
     def is_valid_coord(row: int, col: int) -> bool:
