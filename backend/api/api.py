@@ -4,7 +4,7 @@ from api.piece.utility import Utility
 from api.advanced_ai import AdvancedAI
 import random
 import datetime
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_, select
 
 
 class ChessAPI:
@@ -16,7 +16,9 @@ class ChessAPI:
         """
         Set up database using db_url. Connect to the database, fetch data and create dict sessions where key is
         session_id and value is chess (game instance, username).
-        :param db_url:
+        :param db_url: if db_url is "init", the db_url is
+            'postgresql+psycopg2://postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432'
+        Otherwise, db_url can be the value of the parameter passed in
         """
         if db_url == "init":
             db_url = 'postgresql+psycopg2://postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432'
@@ -45,7 +47,8 @@ class ChessAPI:
             'users', meta,
             Column('username', String, primary_key=True),
             Column('password', String),
-            Column('total_hours', Float)
+            Column('total_hours', Float),
+            Column('score', Integer)
         )
 
         meta.create_all(self.engine)
@@ -87,8 +90,8 @@ class ChessAPI:
     def create_game(self, username: str, mode: str) -> dict:
         """
         Create a new chess game in put it in the dictionary, store the data in the database.
-        :param username:
-        :param mode:
+        :param username: username of the user playing the game
+        :param mode: the mode of the game. "easy": easy AI game; "advanced": advanced AI game; "pvp": player vs player
         :return: A dict where only has one key "session_id"
         """
         session_id = self.generate_unique_session_id()
@@ -112,7 +115,7 @@ class ChessAPI:
     def resume_game(self, username: str) -> dict:
         """
         Get all on-going unfinished sessions and their start time and last update time.
-        :param username:
+        :param username: username of the user playing the game
         :return: A dict which has key "resume_list" and value as a list of dict storing session id,
         start time, last update and mode
         """
@@ -136,7 +139,7 @@ class ChessAPI:
     def replay_game(self, username: str) -> dict:
         """
         Get all sessions that could be replayed
-        :param username:
+        :param username: username of the user playing the game
         :return: A dict which has key "replay_list" and value as a list of dict storing session id,
         start time, last update and mode
         """
@@ -190,8 +193,8 @@ class ChessAPI:
             src_coord = Utility.decode(src)
             tar_coord = Utility.decode(tar)
             game = self.sessions[session_id][0]
-
             valid = game.update(src_coord, tar_coord, role)
+
             if valid:
                 self.update_history(session_id)
                 self.update_current(session_id)
@@ -205,6 +208,7 @@ class ChessAPI:
                 elif self.modes[session_id] == 'advanced':
                     ai = AdvancedAI(game)
 
+                # noinspection PyUnboundLocalVariable
                 src_row, src_col, tar_row, tar_col = ai.get_next_move()
                 src = (src_row, src_col)
                 tar = (tar_row, tar_col)
@@ -215,7 +219,13 @@ class ChessAPI:
                 is_being_checked = game.is_being_checked()
                 status = game.check_game_status()
                 turn = game.get_turn()
-            return {"valid": valid, "is_being_checked": is_being_checked, "game_status": status, "turn": turn, "validSession": True}
+
+            if status in ["WhiteLoss", "BlackLoss"] and valid and self.modes[session_id] != "pvp":
+                self.update_score(session_id, username, status)
+
+            return {"valid": valid, "is_being_checked": is_being_checked, "game_status": status, "turn": turn,
+                    "validSession": True}
+
         return {"valid": False, "validSession": False}
 
     def get_checked_moves(self, request: dict, username: str) -> dict:
@@ -306,20 +316,23 @@ class ChessAPI:
     def get_user_info(self, username: str) -> dict:
         """
         Get information associated with the logged in user
-        :param username:
+        :param username: username of the user playing the game
         :return: A dict with key "username", "total_hours", "valid" and corresponding values
         """
         conn = self.engine.connect()
         result = conn.execute(self.users.select().where(self.users.c.username == username))
         user = result.all()
         conn.close()
-        return {"username": user[0]["username"], "total_hours": user[0]["total_hours"], "valid": True}
+        return {"username": user[0]["username"],
+                "total_hours": user[0]["total_hours"],
+                "score": user[0]["score"],
+                "valid": True}
 
     def undo(self, username: str, session_id: int) -> dict:
         """
         Undo one step in the game, will delete history in both game() and database table
-        :param username:
-        :param session_id:
+        :param username: username of the user playing the game
+        :param session_id: session_id of the game
         :return: A dict with information of the game after undo
         """
         if session_id in self.sessions and self.sessions[session_id][1] == username:
@@ -350,8 +363,8 @@ class ChessAPI:
     def replay(self, username: str, session_id: int, step: int) -> dict:
         """
         Get information of certain game after certain step
-        :param username:
-        :param session_id:
+        :param username: username of the user playing the game
+        :param session_id: session_id of the game
         :param step:
         :return: A dict with key "fen", "history" and "valid" with corresponding values
         """
@@ -370,3 +383,55 @@ class ChessAPI:
             else:
                 return {"valid": False, "validSession": True}
         return {"valid": False, "validSession": False}
+
+    def update_score(self, session_id: int, username: str, status: str) -> None:
+        """
+        Update user's score in PvE game.
+        If a user win(lose to) easy AI player, the user will earn(lose) 5 points.
+        If a user win(lose to) advanced AI player, the user will earn(lose) 10 points.
+        If a user win(lose) a game within 10 moves, the user will earn(lose) extra 10 points.
+        If a user win(lose) a game within 20 moves, the user will earn(lose) extra 5 points.
+        If a game is a draw, the user will earn 0 points.
+        :param session_id: session_id of the game
+        :param username: username of the user playing the game
+        :param status: status of the current game. "WhiteLoss" means the player who moves first is lost. Otherwise, the
+        player who move second is lost.
+        :return: None
+        """
+        current_score = self.get_user_info(username)["score"]
+        delta = 0
+        step = self.sessions[session_id][0].get_history()["step"]
+
+        if self.modes[session_id] == 'easy':
+            delta += 5
+        if self.modes[session_id] == 'advanced':
+            delta += 10
+        if step <= 10:
+            delta += 10
+        elif step <= 20:
+            delta += 5
+
+        if status == "WhiteLoss":
+            current_score -= delta
+        else:
+            current_score += delta
+        conn = self.engine.connect()
+        conn.execute(self.users.update().where(self.users.c.username == username), {"score": current_score})
+        conn.close()
+
+    def get_rankings(self) -> dict:
+        """
+        Get a ranking of users' score from database. Only include the first 5 users.
+        An example of a ranking:
+        {"rankings": [["UserA", 50], ["UserB", 40], ["UserC", 20], ["UserD", 20], ["UserE, 10]], "valid": True}
+        :return: a dictionary with two keys. One is "rankings" and its value is a list of username and score.
+        Another is "valid" and its value is True
+        """
+        conn = self.engine.connect()
+        rankings = conn.execute(select(self.users.c.username, self.users.c.score)
+                                .order_by(self.users.c.score.desc())).all()[:5]
+        conn.close()
+        ret = []
+        for ranking in rankings:
+            ret.append([ranking[0], ranking[1]])
+        return {"rankings": ret, "valid": True}

@@ -252,8 +252,22 @@ app.post("/signup", function (req, res) {
   }
 });
 
+app.get("/rankings", function (req, res) {
+  if (!req.session.user) {
+    res.json({ valid: false });
+  } else {
+    fetch(proxy + "/rankings", {
+      method: "GET",
+      credentials: "include"
+    })
+      .then((response) => response.json())
+      .then((json) => res.json(json));
+  }
+});
+
 app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, ".", "build", "index.html"));
 });
+
 
 app.listen(3000);

@@ -13,6 +13,7 @@ Welcome to ChessGame's documentation!
    api
    chess_game
    simple_ai
+   advanced_ai
    piece
 
 Indices and tables

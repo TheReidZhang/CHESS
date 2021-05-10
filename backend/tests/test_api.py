@@ -1,6 +1,6 @@
 import unittest
-from api.piece.utility import Coordinate
 from api.api import ChessAPI
+from api.piece.utility import Utility
 import os
 
 
@@ -50,12 +50,12 @@ class ChessAPITestCase(unittest.TestCase):
         db_url = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
         api = ChessAPI(db_url=db_url)
         session = api.create_game("hu4396", "pvp")["session_id"]
-        init_info = api.get_info({"session_id": session}, "hu4396")
+        init_info = api.get_info({"session_id": session, "user": "hu4396"})
         self.assertEqual(init_info["status"], "Continue")
         ChessAPITestCase.remove_db_file()
 
     def test_get_checked_moves(self):
-        coord = Coordinate(1, 1).encode()
+        coord = Utility.encode(1, 1)
         db_url = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
         api = ChessAPI(db_url=db_url)
 
@@ -68,10 +68,9 @@ class ChessAPITestCase(unittest.TestCase):
         db_url = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
         api = ChessAPI(db_url=db_url)
         conn = api.engine.connect()
-        src = Coordinate(1, 0)
-        tar = Coordinate(3, 0)
         session_id = api.create_game("hu4396", "pvp")["session_id"]
-        api.update_game({"session_id": session_id, "src": src.encode(), "tar": tar.encode(), "role": "Pawn"}, "hu4396")
+        api.update_game({"session_id": session_id, "src": Utility.encode(1, 0), "tar": Utility.encode(3, 0),
+                         "role": "Pawn", "user": "hu4396"})
         ret = conn.execute(api.history.select().where(api.history.c.session_id == session_id))
         updated_src = ret.fetchall()[0]["src"]
         conn.close()
@@ -83,13 +82,13 @@ class ChessAPITestCase(unittest.TestCase):
         api = ChessAPI(db_url=db_url)
         session_id = api.create_game("hu4396", "pvp")["session_id"]
         ret = api.replay("hu", session_id, 0)
-        self.assertEqual(ret, {"valid": False})
+        self.assertEqual(ret["valid"], False)
 
         ret = api.replay("hu", session_id, -10)
-        self.assertEqual(ret, {"valid": False})
+        self.assertEqual(ret["valid"], False)
 
         ret = api.replay("hu", session_id, 1000)
-        self.assertEqual(ret, {"valid": False})
+        self.assertEqual(ret["valid"], False)
         ChessAPITestCase.remove_db_file()
 
     def test_undo_takes_back_a_step(self):
@@ -97,8 +96,9 @@ class ChessAPITestCase(unittest.TestCase):
         api = ChessAPI(db_url=db_url)
         session_id = api.create_game("hu4396", "pvp")["session_id"]
         ret = api.undo("hu4396", session_id)
-        self.assertEqual(ret["fen"], 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
-        api.update_game({"session_id": session_id, "src": "a2", "tar": "a4", "role": "Pawn"}, "hu4396")
+        self.assertEqual(ret["valid"], False)
+        self.assertEqual(ret["validSession"], True)
+        api.update_game({"session_id": session_id, "src": "a2", "tar": "a4", "role": "Pawn", "user": "hu4396"})
         ret = api.undo("hu4396", session_id)
         self.assertEqual(ret["fen"], 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
         ChessAPITestCase.remove_db_file()
@@ -121,5 +121,21 @@ class ChessAPITestCase(unittest.TestCase):
         ret = api.login({"username": "1", "password": "1"})
         self.assertEqual(ret["valid"], False)
 
-        ret = api.update_game({"session_id": session_id}, "admin")
+        ret = api.update_game({"session_id": session_id, "user": "hu439"})
         self.assertEqual(ret["valid"], False)
+
+    def test_replay_a_session(self):
+        db_url = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
+        api = ChessAPI(db_url=db_url)
+        session_id = api.create_game("hu4396", "pvp")["session_id"]
+        api.update_game({"session_id": session_id, "src": Utility.encode(1, 0), "tar": Utility.encode(3, 0),
+                         "role": "Pawn", "user": "hu4396"})
+        ret = api.replay("hu4396", session_id, 1)
+        self.assertEqual(ret["history"], {'src': 'a2', 'tar': 'a4'})
+
+    def test_get_rankings(self):
+        db_url = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
+        api = ChessAPI(db_url=db_url)
+        ret = api.get_rankings()
+        self.assertEqual(ret["rankings"], [])
+

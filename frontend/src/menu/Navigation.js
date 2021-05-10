@@ -8,6 +8,8 @@ import { useHistory } from "react-router-dom";
 function Navigation(props) {
   const [userName, setUserName] = useState("");
   const [totalHours, setTotalHours] = useState(0);
+  const [score, setScore] = useState(0);
+
   useEffect(() => {
     fetch("/user")
       .then((response) => response.json())
@@ -16,6 +18,7 @@ function Navigation(props) {
           props.setIsLoggedIn(true);
           setUserName(json["username"]);
           setTotalHours(json["total_hours"]);
+          setScore(json["score"]);
         }
       });
   }, []);
@@ -49,6 +52,17 @@ function Navigation(props) {
               }}
             >
               Total Hours: {totalHours}
+            </div>
+          </NavDropdown.Item>
+          <NavDropdown.Item>
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: "50%",
+                fontWeight: "bold",
+              }}
+            >
+              Score: {score}
             </div>
           </NavDropdown.Item>
           <NavDropdown.Divider />

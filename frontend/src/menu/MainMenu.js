@@ -13,8 +13,10 @@ function MainMenu() {
   const [showMode, setShowMode] = useState(false);
   const [resumeIsOpen, setResumeIsOpen] = useState(false);
   const [replayIsOpen, setReplayIsOpen] = useState(false);
+  const [rankingsIsOpen, setRankingsIsOpen] = useState(false);
   const [resumeList, setResumeList] = useState([]);
   const [replayList, setReplayList] = useState([]);
+  const [rankings, setRankings] = useState([]);
 
   const history = useHistory();
 
@@ -95,6 +97,30 @@ function MainMenu() {
         }
       });
   };
+
+  const get_rankings = () => {
+    fetch("/rankings")
+      .then((response) => response.json())
+      .then((json) => {
+        if (json["valid"]) {
+          const lst = json["rankings"];
+          let ret = [];
+          for (let i = 0; i < lst.length; i++) {
+            ret.push(
+              <h1 key={lst[i]["session_id"]}>
+                Rank {i + 1}: {lst[i][0]} {lst[i][1]}
+              </h1> 
+            );
+          }
+          setRankings(ret);
+          setRankingsIsOpen(true);
+        } else {
+          alert("Log in first!");
+          history.push("/");
+          history.go(0);
+        }
+      });
+  }
 
   return (
     <div className="center-container">
@@ -191,6 +217,24 @@ function MainMenu() {
             <Modal.Body>{replayList}</Modal.Body>
           </Modal>
         </Col>
+
+        <Col md={12} xs={12} lg={12} sm={12} className="mb-5">
+          <Button
+            variant="outline-dark"
+            className="myBtn"
+            size="lg"
+            onClick={get_rankings}
+          >
+            Rankings
+          </Button>
+          <Modal show={rankingsIsOpen} onHide={() => setRankingsIsOpen(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title>Rankings</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>{rankings}</Modal.Body>
+          </Modal>
+        </Col>
+
       </Row>
     </div>
   );

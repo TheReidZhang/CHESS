@@ -30,5 +30,5 @@ Piece Class
 .. automodule:: api.piece.rook
    :members:
 
-.. automodule:: api.piece.coordinate
+.. automodule:: api.piece.utility
    :members:

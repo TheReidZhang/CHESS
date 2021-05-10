@@ -8,7 +8,6 @@ from api.piece.queen import Queen
 from api.piece.rook import Rook
 from api.piece.empty import Empty
 from api.piece.piece_interface import Color
-from api.piece.utility import Coordinate
 import random
 
 
@@ -25,17 +24,17 @@ class TestInitial(unittest.TestCase):
         self.assertEqual(self.game.full_move_clock, 1)
         self.assertEqual(self.game.en_passant_target_notation, "-")
         for col in range(8):
-            self.game.board[1][col] = Pawn(self.game, Color.WHITE)
-            self.game.board[6][col] = Pawn(self.game, Color.BLACK)
+            self.game.board[1][col] = Pawn(self.game, Color.WHITE, 1, col)
+            self.game.board[6][col] = Pawn(self.game, Color.BLACK, 6, col)
         for row, color in [(0, Color.WHITE), (7, Color.BLACK)]:
-            self.game.board[row][0] = Rook(self.game, color)
-            self.game.board[row][7] = Rook(self.game, color)
-            self.game.board[row][1] = Knight(self.game, color)
-            self.game.board[row][6] = Knight(self.game, color)
-            self.game.board[row][2] = Bishop(self.game, color)
-            self.game.board[row][5] = Bishop(self.game, color)
-            self.game.board[row][3] = Queen(self.game, color)
-            self.game.board[row][4] = King(self.game, color)
+            self.game.board[row][0] = Rook(self.game, color, row, 0)
+            self.game.board[row][7] = Rook(self.game, color, row, 7)
+            self.game.board[row][1] = Knight(self.game, color, row, 1)
+            self.game.board[row][6] = Knight(self.game, color, row, 6)
+            self.game.board[row][2] = Bishop(self.game, color, row, 2)
+            self.game.board[row][5] = Bishop(self.game, color, row, 5)
+            self.game.board[row][3] = Queen(self.game, color, row, 3)
+            self.game.board[row][4] = King(self.game, color, row, 4)
 
 
 class TestInitHistory(unittest.TestCase):
@@ -133,49 +132,249 @@ class TestGetCheckedMoves(unittest.TestCase):
         self.game.count = 200
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
+                self.game.board[row][col] = Empty(None, Color.EMPTY, row, col)
 
     def test_get_checked_moves_checkmate(self):
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][4] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[3][3] = Bishop(self.game, Color.BLACK)
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][4] = King(self.game, Color.BLACK, 7, 4)
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[4][5] = Pawn(self.game, Color.WHITE, 4, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[3][3] = Bishop(self.game, Color.BLACK, 3, 3)
         self.game.turn = Color.WHITE
 
-        checked_moves = self.game.get_checked_moves(Coordinate(4, 1))
+        checked_moves = self.game.get_checked_moves((4, 1))
         moves = checked_moves["moves"]
         for move in moves:
             self.assertTrue(move in ["b2"])
 
-        checked_moves = self.game.get_checked_moves(Coordinate(0, 0))
+        checked_moves = self.game.get_checked_moves((0, 0))
         moves = checked_moves["moves"]
         for move in moves:
             self.assertTrue(move in ["a2"])
 
-        checked_moves = self.game.get_checked_moves(Coordinate(4, 5))
+        checked_moves = self.game.get_checked_moves((4, 5))
         moves = checked_moves["moves"]
         for move in moves:
             self.assertTrue(move in [])
 
     def test_get_checked_moves_checkmate2(self):
-        self.game.board[0][3] = King(self.game, Color.WHITE)
-        self.game.board[7][4] = King(self.game, Color.BLACK)
-        self.game.board[1][2] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[3][4] = Bishop(self.game, Color.BLACK)
+        self.game.board[0][3] = King(self.game, Color.WHITE, 0, 3)
+        self.game.board[7][4] = King(self.game, Color.BLACK, 7, 4)
+        self.game.board[1][2] = Pawn(self.game, Color.BLACK, 1, 2)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[3][4] = Bishop(self.game, Color.BLACK, 3, 4)
         self.game.turn = Color.WHITE
 
-        checked_moves = self.game.get_checked_moves(Coordinate(0, 3))
+        checked_moves = self.game.get_checked_moves((0, 3))
         moves = checked_moves["moves"]
         for move in moves:
             self.assertTrue(move in ["c1", "d2", "e1", "e2"])
 
-        checked_moves = self.game.get_checked_moves(Coordinate(4, 1))
+        checked_moves = self.game.get_checked_moves((4, 1))
         moves = checked_moves["moves"]
         for move in moves:
             self.assertTrue(move in [])
+
+
+class TestUpdateEnPassant(unittest.TestCase):
+    def setUp(self) -> None:
+        self.game = ChessGame(fen="start")
+
+    def test_update_implement_en_passant(self):
+        self.game.half_move_clock = 0
+        self.game.full_move_clock = 10
+        self.game.count = 20
+        self.game.empty_cell = Empty(None, Color.EMPTY, -1, -1)
+        self.game.history = [{"fen": "3q4/8/8/8/Pp6/8/8/5K2 b - a3 0 10",
+                             "movement": {"src": "a2", "tar": "a4"}}]
+        self.game.castling_notation = "-"
+        self.game.turn = Color.BLACK
+        for row in range(8):
+            for col in range(8):
+                self.game.board[row][col] = self.game.empty_cell
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.board[0][5] = King(self.game, Color.WHITE, 0, 5)
+        self.game.board[3][0] = Pawn(self.game, Color.WHITE, 3, 0)
+        self.game.board[3][1] = Pawn(self.game, Color.BLACK, 3, 1)
+        self.game.update_en_passant((3, 1), (2, 0))
+        self.assertEqual(self.game.board[3][0], self.game.empty_cell)
+
+
+class TestUpdateEnPassantNotation(unittest.TestCase):
+    def setUp(self) -> None:
+        self.game = ChessGame(fen="start")
+
+    def test_update_en_passant_notation(self):
+        self.game.update_en_passant_notation((1, 0), (3, 0))
+        self.assertEqual(self.game.en_passant_target_notation, "a3")
+
+        self.game.update_en_passant_notation((1, 1), (3, 1))
+        self.assertEqual(self.game.en_passant_target_notation, "b3")
+
+        self.game.update_en_passant_notation((1, 2), (3, 2))
+        self.assertEqual(self.game.en_passant_target_notation, "c3")
+
+        self.game.update_en_passant_notation((1, 3), (3, 3))
+        self.assertEqual(self.game.en_passant_target_notation, "d3")
+
+        self.game.update_en_passant_notation((1, 4), (3, 4))
+        self.assertEqual(self.game.en_passant_target_notation, "e3")
+
+        self.game.update_en_passant_notation((1, 5), (3, 5))
+        self.assertEqual(self.game.en_passant_target_notation, "f3")
+
+        self.game.update_en_passant_notation((1, 6), (3, 6))
+        self.assertEqual(self.game.en_passant_target_notation, "g3")
+
+        self.game.update_en_passant_notation((1, 7), (3, 7))
+        self.assertEqual(self.game.en_passant_target_notation, "h3")
+
+        self.game.update_en_passant_notation((6, 0), (4, 0))
+        self.assertEqual(self.game.en_passant_target_notation, "a6")
+
+        self.game.update_en_passant_notation((6, 1), (4, 1))
+        self.assertEqual(self.game.en_passant_target_notation, "b6")
+
+        self.game.update_en_passant_notation((6, 2), (4, 2))
+        self.assertEqual(self.game.en_passant_target_notation, "c6")
+
+        self.game.update_en_passant_notation((6, 3), (4, 3))
+        self.assertEqual(self.game.en_passant_target_notation, "d6")
+
+        self.game.update_en_passant_notation((6, 4), (4, 4))
+        self.assertEqual(self.game.en_passant_target_notation, "e6")
+
+        self.game.update_en_passant_notation((6, 5), (4, 5))
+        self.assertEqual(self.game.en_passant_target_notation, "f6")
+
+        self.game.update_en_passant_notation((6, 6), (4, 6))
+        self.assertEqual(self.game.en_passant_target_notation, "g6")
+
+        self.game.update_en_passant_notation((6, 7), (4, 7))
+        self.assertEqual(self.game.en_passant_target_notation, "h6")
+
+
+class TestUpdateCastle(unittest.TestCase):
+    def setUp(self) -> None:
+        self.game = ChessGame(fen="start")
+
+    def test_update_castle(self):
+        self.game.half_move_clock = 0
+        self.game.full_move_clock = 10
+        self.game.count = 20
+        self.game.empty_cell = Empty(None, Color.EMPTY, -1, -1)
+        self.game.history = [{"fen": "r3k3/8/8/8/Pp6/8/8/4K2R b Kq a3 0 10",
+                              "movement": {"src": "a2", "tar": "a4"}}]
+        self.game.turn = Color.BLACK
+        for row in range(8):
+            for col in range(8):
+                self.game.board[row][col] = self.game.empty_cell
+        self.game.board[7][4] = King(self.game, Color.BLACK, 7, 4)
+        self.game.board[7][4].firstMove = True
+        self.game.board[7][0] = Rook(self.game, Color.BLACK, 7, 0)
+        self.game.board[7][0].firstMove = True
+        self.game.board[0][4] = King(self.game, Color.WHITE, 0, 4)
+        self.game.board[0][4].firstMove = True
+        self.game.board[0][7] = Rook(self.game, Color.WHITE, 0, 7)
+        self.game.board[0][7].firstMove = True
+        self.game.board[3][0] = Pawn(self.game, Color.WHITE, 3, 0)
+        self.game.board[3][1] = Pawn(self.game, Color.BLACK, 3, 1)
+        expected_1 = self.game.board[7][0]
+        expected_2 = self.game.board[0][7]
+
+        self.game.update_castle((7, 4), (7, 2))
+        self.assertEqual(self.game.board[7][3], expected_1)
+
+        self.game.update_castle((0, 4), (0, 6))
+        self.assertEqual(self.game.board[0][5], expected_2)
+
+
+class TestUpdateMovementClock(unittest.TestCase):
+    def setUp(self) -> None:
+        self.game = ChessGame(fen="start")
+
+    def test_update_movement_clock(self):
+        self.game.update_movement_clock((1, 0), (3, 0))
+        self.assertEqual(self.game.count, 1)
+        self.assertEqual(self.game.full_move_clock, 1)
+        self.assertEqual(self.game.half_move_clock, 0)
+
+        self.game.update_movement_clock((6, 0), (4, 0))
+        self.assertEqual(self.game.count, 2)
+        self.assertEqual(self.game.full_move_clock, 2)
+        self.assertEqual(self.game.half_move_clock, 0)
+
+        self.game.update_movement_clock((0, 6), (2, 5))
+        self.assertEqual(self.game.count, 3)
+        self.assertEqual(self.game.full_move_clock, 2)
+        self.assertEqual(self.game.half_move_clock, 1)
+
+        self.game.update_movement_clock((6, 3), (5, 3))
+        self.assertEqual(self.game.count, 4)
+        self.assertEqual(self.game.full_move_clock, 3)
+        self.assertEqual(self.game.half_move_clock, 0)
+
+        self.game.update_movement_clock((0, 1), (2, 2))
+        self.assertEqual(self.game.count, 5)
+        self.assertEqual(self.game.full_move_clock, 3)
+        self.assertEqual(self.game.half_move_clock, 1)
+
+        self.game.update_movement_clock((7, 0), (5, 0))
+        self.game.update_movement_clock((1, 4), (3, 4))
+        self.game.update_movement_clock((7, 1), (5, 2))
+        self.assertEqual(self.game.count, 8)
+        self.assertEqual(self.game.full_move_clock, 5)
+        self.assertEqual(self.game.half_move_clock, 1)
+
+        self.game.board[5][0] = Rook(self, Color.BLACK, 5, 0)
+        self.game.update_movement_clock((0, 5), (5, 0))
+        self.assertEqual(self.game.count, 9)
+        self.assertEqual(self.game.full_move_clock, 5)
+        self.assertEqual(self.game.half_move_clock, 0)
+
+
+class TestUpdatePromotion(unittest.TestCase):
+    def setUp(self) -> None:
+        self.game = ChessGame(fen="start")
+
+    def test_update_implement_promotion(self):
+        self.game.half_move_clock = 0
+        self.game.full_move_clock = 10
+        self.game.count = 20
+        self.game.empty_cell = Empty(None, Color.EMPTY, -1, -1)
+        self.game.history = [{"fen": "3bk3/PP6/8/8/8/8/6pp/4KB2 w - - 0 10",
+                              "movement": {"src": "a6", "tar": "a7"}}]
+        self.game.turn = Color.WHITE
+        for row in range(8):
+            for col in range(8):
+                self.game.board[row][col] = self.game.empty_cell
+        self.game.board[7][4] = King(self.game, Color.BLACK, 7, 4)
+        self.game.board[7][3] = Bishop(self.game, Color.BLACK, 7, 3)
+        self.game.board[7][4].firstMove = True
+        self.game.board[0][4] = King(self.game, Color.WHITE, 0, 4)
+        self.game.board[0][5] = Rook(self.game, Color.WHITE, 0, 5)
+        self.game.board[0][4].firstMove = True
+        self.game.board[6][0] = Pawn(self.game, Color.WHITE, 6, 0)
+        self.game.board[1][7] = Pawn(self.game, Color.BLACK, 1, 7)
+        self.game.board[6][1] = Pawn(self.game, Color.WHITE, 6, 1)
+        self.game.board[1][6] = Pawn(self.game, Color.BLACK, 1, 6)
+
+        self.game.update_promotion((6, 0), (7, 0), "Queen")
+        self.assertEqual(type(self.game.board[7][0]), Queen)
+        self.assertEqual(self.game.board[7][0].color, Color.WHITE)
+
+        self.game.update_promotion((1, 7), (0, 7), "Rook")
+        self.assertEqual(type(self.game.board[0][7]), Rook)
+        self.assertEqual(self.game.board[0][7].color, Color.BLACK)
+
+        self.game.update_promotion((6, 1), (7, 1), "Bishop")
+        self.assertEqual(type(self.game.board[7][1]), Bishop)
+        self.assertEqual(self.game.board[7][0].color, Color.WHITE)
+
+        self.game.update_promotion((1, 6), (0, 6), "Knight")
+        self.assertEqual(type(self.game.board[0][6]), Knight)
+        self.assertEqual(self.game.board[0][6].color, Color.BLACK)
 
 
 class TestUpDate(unittest.TestCase):
@@ -187,8 +386,8 @@ class TestUpDate(unittest.TestCase):
         random_num_2 = random.randint(0, 7)
         for row in range(6, 8):
             for col in range(8):
-                self.assertFalse(self.game.update(Coordinate(row, col),
-                                                  Coordinate(random_num_1, random_num_2), "Queen"))
+                self.assertFalse(self.game.update((row, col),
+                                 (random_num_1, random_num_2), "Queen"))
 
     def test_update_ended_without_continue(self):
         self.game.half_move_clock = 49
@@ -197,142 +396,64 @@ class TestUpDate(unittest.TestCase):
         self.game.en_passant_target_notation = "-"
         self.game.castling_notation = "-"
         self.game.turn = Color.WHITE
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[0][5] = King(self.game, Color.WHITE)
-        self.assertTrue(self.game.update(Coordinate(0, 5), Coordinate(0, 4), "Queen"))
-        self.assertFalse(self.game.update(Coordinate(7, 3), Coordinate(7, 2), "Queen"))
-
-    def test_update_implement_en_passant(self):
-        self.game.half_move_clock = 0
-        self.game.full_move_clock = 10
-        self.game.count = 20
-        self.game.empty_cell = Empty(None, Color.EMPTY)
-        self.game.history = [{"fen": "3q4/8/8/8/Pp6/8/8/5K2 b - a3 0 10",
-                             "movement": {"src": "a2", "tar": "a4"}}]
-        self.game.castling_notation = "-"
-        self.game.turn = Color.BLACK
-        for row in range(8):
-            for col in range(8):
-                self.game.board[row][col] = self.game.empty_cell
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[0][5] = King(self.game, Color.WHITE)
-        self.game.board[3][0] = Pawn(self.game, Color.WHITE)
-        self.game.board[3][1] = Pawn(self.game, Color.BLACK)
-        self.game.update(Coordinate(3, 1), Coordinate(2, 0), "Queen")
-        self.assertEqual(self.game.board[3][0], self.game.empty_cell)
-
-    def test_update_implement_castle(self):
-        self.game.half_move_clock = 0
-        self.game.full_move_clock = 10
-        self.game.count = 20
-        self.game.empty_cell = Empty(None, Color.EMPTY)
-        self.game.history = [{"fen": "r3k3/8/8/8/Pp6/8/8/4K2R b Kq a3 0 10",
-                              "movement": {"src": "a2", "tar": "a4"}}]
-        self.game.turn = Color.BLACK
-        for row in range(8):
-            for col in range(8):
-                self.game.board[row][col] = self.game.empty_cell
-        self.game.board[7][4] = King(self.game, Color.BLACK)
-        self.game.board[7][4].firstMove = True
-        self.game.board[7][0] = Rook(self.game, Color.BLACK)
-        self.game.board[7][0].firstMove = True
-        self.game.board[0][4] = King(self.game, Color.WHITE)
-        self.game.board[0][4].firstMove = True
-        self.game.board[0][7] = Rook(self.game, Color.WHITE)
-        self.game.board[0][7].firstMove = True
-        self.game.board[3][0] = Pawn(self.game, Color.WHITE)
-        self.game.board[3][1] = Pawn(self.game, Color.BLACK)
-        expected_1 = self.game.board[7][0]
-        expected_2 = self.game.board[0][7]
-
-        self.game.update(Coordinate(7, 4), Coordinate(7, 2), "Queen")
-        self.assertEqual(self.game.board[7][3], expected_1)
-
-        self.game.update(Coordinate(0, 4), Coordinate(0, 6), "Queen")
-        self.assertEqual(self.game.board[0][5], expected_2)
-
-    def test_update_implement_promotion(self):
-        self.game.half_move_clock = 0
-        self.game.full_move_clock = 10
-        self.game.count = 20
-        self.game.empty_cell = Empty(None, Color.EMPTY)
-        self.game.history = [{"fen": "3bk3/PP6/8/8/8/8/6pp/4KB2 w - - 0 10",
-                              "movement": {"src": "a6", "tar": "a7"}}]
-        self.game.turn = Color.WHITE
-        for row in range(8):
-            for col in range(8):
-                self.game.board[row][col] = self.game.empty_cell
-        self.game.board[7][4] = King(self.game, Color.BLACK)
-        self.game.board[7][3] = Bishop(self.game, Color.BLACK)
-        self.game.board[7][4].firstMove = True
-        self.game.board[0][4] = King(self.game, Color.WHITE)
-        self.game.board[0][5] = Rook(self.game, Color.WHITE)
-        self.game.board[0][4].firstMove = True
-        self.game.board[6][0] = Pawn(self.game, Color.WHITE)
-        self.game.board[1][7] = Pawn(self.game, Color.BLACK)
-        self.game.board[6][1] = Pawn(self.game, Color.WHITE)
-        self.game.board[1][6] = Pawn(self.game, Color.BLACK)
-
-        self.game.update(Coordinate(6, 0), Coordinate(7, 0), "Queen")
-        self.assertEqual(type(self.game.board[7][0]), Queen)
-        self.assertEqual(self.game.board[7][0].color, Color.WHITE)
-
-        self.game.update(Coordinate(1, 7), Coordinate(0, 7), "Rook")
-        self.assertEqual(type(self.game.board[0][7]), Rook)
-        self.assertEqual(self.game.board[0][7].color, Color.BLACK)
-
-        self.game.update(Coordinate(6, 1), Coordinate(7, 1), "Bishop")
-        self.assertEqual(type(self.game.board[7][1]), Bishop)
-        self.assertEqual(self.game.board[7][0].color, Color.WHITE)
-
-        self.game.update(Coordinate(1, 6), Coordinate(0, 6), "Knight")
-        self.assertEqual(type(self.game.board[0][6]), Knight)
-        self.assertEqual(self.game.board[0][6].color, Color.BLACK)
+                self.game.board[row][col] = empty
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.board[0][5] = King(self.game, Color.WHITE, 0, 5)
+        self.assertTrue(self.game.update((0, 5), (0, 4), "Queen"))
+        self.assertFalse(self.game.update((7, 3), (7, 2), "Queen"))
 
     def test_update_move_pawn(self):
         for col in range(8):
-            self.assertTrue(self.game.update(Coordinate(1, col), Coordinate(3, col), "Queen"))
+            self.assertTrue(self.game.update((1, col), (3, col), "Queen"))
             self.assertEqual(self.game.en_passant_target_notation, chr(ord('a') + col) + "3")
             self.game.turn = Color.WHITE
         for col in range(8):
-            self.assertTrue(self.game.update(Coordinate(3, col), Coordinate(4, col), "Queen"))
+            self.assertTrue(self.game.update((3, col), (4, col), "Queen"))
             self.game.turn = Color.WHITE
 
     def test_update_move_white(self):
         random_num_1 = random.randint(0, 7)
         random_num_2 = random.randint(0, 7)
-        self.assertFalse(self.game.update(Coordinate(0, 0), Coordinate(random_num_1, random_num_2), "Queen"))
+        self.assertFalse(self.game.update((0, 0), (random_num_1, random_num_2), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertTrue(self.game.update(Coordinate(0, 1), Coordinate(2, 0), "Queen"))
+        self.assertTrue(self.game.update((0, 1), (2, 0), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertTrue(self.game.update(Coordinate(2, 0), Coordinate(0, 1), "Queen"))
+        self.assertTrue(self.game.update((2, 0), (0, 1), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertFalse(self.game.update(Coordinate(0, 2), Coordinate(random_num_1, random_num_2), "Queen"))
+        self.assertFalse(self.game.update((0, 2), (random_num_1, random_num_2), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertFalse(self.game.update(Coordinate(0, 3), Coordinate(random_num_1, random_num_2), "Queen"))
+        self.assertFalse(self.game.update((0, 3), (random_num_1, random_num_2), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertFalse(self.game.update(Coordinate(0, 4), Coordinate(random_num_1, random_num_2), "Queen"))
+        self.assertFalse(self.game.update((0, 4), (random_num_1, random_num_2), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertFalse(self.game.update(Coordinate(0, 5), Coordinate(random_num_1, random_num_2), "Queen"))
+        self.assertFalse(self.game.update((0, 5), (random_num_1, random_num_2), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertTrue(self.game.update(Coordinate(0, 6), Coordinate(2, 7), "Queen"))
+        self.assertTrue(self.game.update((0, 6), (2, 7), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertTrue(self.game.update(Coordinate(2, 7), Coordinate(0, 6), "Queen"))
+        self.assertTrue(self.game.update((2, 7), (0, 6), "Queen"))
         self.game.turn = Color.WHITE
-        self.assertFalse(self.game.update(Coordinate(0, 7), Coordinate(random_num_1, random_num_2), "Queen"))
+        self.assertFalse(self.game.update((0, 7), (random_num_1, random_num_2), "Queen"))
+
+    def test_update_kings_coordinate(self):
+        self.game.update((1, 4), (3, 4), "Queen")
+        self.game.update((6, 4), (4, 4), "Queen")
+        self.game.update((0, 4), (1, 4), "Queen")
+        self.game.update((7, 4), (6, 4), "Queen")
+        self.assertEqual(self.game.kings_coordinate[0], (1, 4))
+        self.assertEqual(self.game.kings_coordinate[1], (6, 4))
 
     def test_update_history(self):
-        self.game.update(Coordinate(1, 0), Coordinate(3, 0), "Queen")
-        self.game.update(Coordinate(6, 0), Coordinate(4, 0), "Queen")
-        self.game.update(Coordinate(0, 0), Coordinate(2, 0), "Queen")
-        self.game.update(Coordinate(7, 0), Coordinate(5, 0), "Queen")
-        self.game.update(Coordinate(1, 7), Coordinate(3, 7), "Queen")
-        self.game.update(Coordinate(6, 7), Coordinate(4, 7), "Queen")
-        self.game.update(Coordinate(0, 7), Coordinate(2, 7), "Queen")
-        self.game.update(Coordinate(7, 7), Coordinate(5, 7), "Queen")
+        self.game.update((1, 0), (3, 0), "Queen")
+        self.game.update((6, 0), (4, 0), "Queen")
+        self.game.update((0, 0), (2, 0), "Queen")
+        self.game.update((7, 0), (5, 0), "Queen")
+        self.game.update((1, 7), (3, 7), "Queen")
+        self.game.update((6, 7), (4, 7), "Queen")
+        self.game.update((0, 7), (2, 7), "Queen")
+        self.game.update((7, 7), (5, 7), "Queen")
 
         self.assertEqual(self.game.history[0]["fen"], "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1")
         self.assertEqual(self.game.history[0]["movement"], {"src": "a2", "tar": "a4"})
@@ -438,21 +559,13 @@ class TestKingCoordinate(unittest.TestCase):
         self.game = ChessGame(fen="start")
 
     def test_king_coordinate_start(self):
-        self.assertEqual(self.game.king_coordinate(Color.WHITE), Coordinate(0, 4))
-        self.assertEqual(self.game.king_coordinate(Color.BLACK), Coordinate(7, 4))
+        self.assertEqual(self.game.king_coordinate(Color.WHITE), (0, 4))
+        self.assertEqual(self.game.king_coordinate(Color.BLACK), (7, 4))
 
     def test_king_coordinate(self):
-        for row in range(8):
-            for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[3][3] = Bishop(self.game, Color.BLACK)
-        self.assertEqual(self.game.king_coordinate(Color.WHITE), Coordinate(0, 0))
-        self.assertEqual(self.game.king_coordinate(Color.BLACK), Coordinate(7, 3))
+        self.game.kings_coordinate = [(0, 0), (7, 3)]
+        self.assertEqual(self.game.king_coordinate(Color.WHITE), (0, 0))
+        self.assertEqual(self.game.king_coordinate(Color.BLACK), (7, 3))
 
 
 class TestSwitchTurn(unittest.TestCase):
@@ -523,16 +636,17 @@ class TestGetFen(unittest.TestCase):
                          "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
     def test_get_fen_during_game(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[3][3] = Bishop(self.game, Color.BLACK)
-        self.game.history = [{"src": Coordinate(0, 4)}, {"src": Coordinate(7, 4)}]
+                self.game.board[row][col] = empty
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[4][5] = Pawn(self.game, Color.WHITE, 4, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[3][3] = Bishop(self.game, Color.BLACK, 3, 3)
+        self.game.history = [{"src": (0, 4)}, {"src": (7, 4)}]
         self.game.en_passant_target_notation = "-"
         self.game.half_move_clock = 0
         self.game.full_move_clock = 20
@@ -548,27 +662,31 @@ class TestIsBeingChecked(unittest.TestCase):
         self.assertFalse(self.game.is_being_checked())
 
     def test_is_being_checked_during_game_true(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[3][3] = Bishop(self.game, Color.BLACK)
+                self.game.board[row][col] = empty
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 0), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[4][5] = Pawn(self.game, Color.WHITE, 4, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[3][3] = Bishop(self.game, Color.BLACK, 3, 3)
         self.assertTrue(self.game.is_being_checked())
 
     def test_is_being_checked_during_game_false(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][4] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[3][3] = Bishop(self.game, Color.BLACK)
+                self.game.board[row][col] = empty
+        self.game.board[0][4] = King(self.game, Color.WHITE, 0, 4)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 4), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[4][5] = Pawn(self.game, Color.WHITE, 4, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[3][3] = Bishop(self.game, Color.BLACK, 3, 3)
         self.assertFalse(self.game.is_being_checked())
 
 
@@ -577,43 +695,47 @@ class TestIsBeingCheckedAfterMove(unittest.TestCase):
         self.game = ChessGame(fen="start")
 
     def test_is_being_checked_after_move_start(self):
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(1, 4), Coordinate(3, 4)))
+        self.assertFalse(self.game.is_being_checked_after_move((1, 4), (3, 4)))
 
     def test_is_being_checked_after_move_in_few_moves(self):
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(6, 2), Coordinate(4, 2)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(0, 6), Coordinate(2, 5)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(0, 6), Coordinate(2, 5)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(6, 0), Coordinate(4, 0)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(0, 7), Coordinate(0, 6)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(7, 0), Coordinate(6, 0)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(1, 0), Coordinate(3, 0)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(6, 7), Coordinate(4, 7)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(0, 0), Coordinate(1, 0)))
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(7, 7), Coordinate(6, 7)))
+        self.assertFalse(self.game.is_being_checked_after_move((6, 2), (4, 2)))
+        self.assertFalse(self.game.is_being_checked_after_move((0, 6), (2, 5)))
+        self.assertFalse(self.game.is_being_checked_after_move((0, 6), (2, 5)))
+        self.assertFalse(self.game.is_being_checked_after_move((6, 0), (4, 0)))
+        self.assertFalse(self.game.is_being_checked_after_move((0, 7), (0, 6)))
+        self.assertFalse(self.game.is_being_checked_after_move((7, 0), (6, 0)))
+        self.assertFalse(self.game.is_being_checked_after_move((1, 0), (3, 0)))
+        self.assertFalse(self.game.is_being_checked_after_move((6, 7), (4, 7)))
+        self.assertFalse(self.game.is_being_checked_after_move((0, 0), (1, 0)))
+        self.assertFalse(self.game.is_being_checked_after_move((7, 7), (6, 7)))
 
     def test_is_being_checked_after_move_during_game_true(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[4][2] = Bishop(self.game, Color.BLACK)
-        self.assertTrue(self.game.is_being_checked_after_move(Coordinate(4, 2), Coordinate(3, 3)))
+                self.game.board[row][col] = empty
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 0), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[4][5] = Pawn(self.game, Color.WHITE, 4, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[4][2] = Bishop(self.game, Color.BLACK, 4, 2)
+        self.assertTrue(self.game.is_being_checked_after_move((4, 2), (3, 3)))
 
     def test_is_being_checked_after_move_during_game_false(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][4] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[4][2] = Bishop(self.game, Color.BLACK)
-        self.assertFalse(self.game.is_being_checked_after_move(Coordinate(4, 2), Coordinate(2, 4)))
+                self.game.board[row][col] = empty
+        self.game.board[0][4] = King(self.game, Color.WHITE, 0, 4)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 4), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[4][5] = Pawn(self.game, Color.WHITE, 4, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[4][2] = Bishop(self.game, Color.BLACK, 4, 2)
+        self.assertFalse(self.game.is_being_checked_after_move((4, 2), (2, 4)))
 
 
 class TestCheckGameStatus(unittest.TestCase):
@@ -624,132 +746,135 @@ class TestCheckGameStatus(unittest.TestCase):
         self.assertEqual(self.game.check_game_status(), "Continue")
 
     def test_check_game_status_half_move_draw(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[3][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[2][0] = Bishop(self.game, Color.BLACK)
-        self.game.board[2][1] = Bishop(self.game, Color.BLACK)
+                self.game.board[row][col] = empty
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 0), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[3][5] = Pawn(self.game, Color.WHITE, 3, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[2][0] = Bishop(self.game, Color.BLACK, 2, 0)
+        self.game.board[2][1] = Bishop(self.game, Color.BLACK, 2, 1)
         self.game.half_move_clock = 50
         self.assertEqual(self.game.check_game_status(), "Draw")
 
     def test_check_game_status_without_check_draw(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[2][0] = Bishop(self.game, Color.BLACK)
-        self.game.board[2][1] = Bishop(self.game, Color.BLACK)
+                self.game.board[row][col] = empty
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 0), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[2][0] = Bishop(self.game, Color.BLACK, 2, 0)
+        self.game.board[2][1] = Bishop(self.game, Color.BLACK, 2, 1)
         self.assertEqual(self.game.check_game_status(), "Draw")
 
     def test_check_game_status_without_check_continue(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[2][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[2][0] = Bishop(self.game, Color.BLACK)
+                self.game.board[row][col] = empty
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 0), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[2][5] = Pawn(self.game, Color.WHITE, 2, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[2][0] = Bishop(self.game, Color.BLACK, 2, 0)
         self.assertEqual(self.game.check_game_status(), "Continue")
 
     def test_check_game_status_with_check_continue(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[4][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[3][3] = Bishop(self.game, Color.BLACK)
+                self.game.board[row][col] = empty
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 0), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[4][5] = Pawn(self.game, Color.WHITE, 4, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[3][3] = Bishop(self.game, Color.BLACK, 3, 3)
         self.assertEqual(self.game.check_game_status(), "Continue")
 
     def test_check_game_status_with_check_loss(self):
+        empty = Empty(None, Color.EMPTY, -1, -1)
         for row in range(8):
             for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[3][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[2][2] = Bishop(self.game, Color.BLACK)
-        self.game.board[2][1] = Bishop(self.game, Color.BLACK)
+                self.game.board[row][col] = empty
+        self.game.board[0][0] = King(self.game, Color.WHITE, 0, 0)
+        self.game.board[7][3] = King(self.game, Color.BLACK, 7, 3)
+        self.game.kings_coordinate = [(0, 0), (7, 3)]
+        self.game.board[1][0] = Pawn(self.game, Color.BLACK, 1, 0)
+        self.game.board[3][5] = Pawn(self.game, Color.WHITE, 3, 5)
+        self.game.board[4][1] = Rook(self.game, Color.WHITE, 4, 1)
+        self.game.board[2][2] = Bishop(self.game, Color.BLACK, 2, 2)
+        self.game.board[2][1] = Bishop(self.game, Color.BLACK, 2, 1)
         self.assertEqual(self.game.check_game_status(), "WhiteLoss")
 
 
-class TestPieceCoordinate(unittest.TestCase):
+class TestToPiece(unittest.TestCase):
     def setUp(self) -> None:
         self.game = ChessGame(fen="start")
 
-    def test_piece_coordinate_start(self):
-        for row in range(2):
-            for col in range(8):
-                self.assertEqual(self.game.get_piece_coordinate(self.game.board[0][col]), Coordinate(0, col))
-        for row in range(6, 8):
-            for col in range(8):
-                self.assertEqual(self.game.get_piece_coordinate(self.game.board[0][col]), Coordinate(0, col))
-
-    def test__piece_coordinate_during_game(self):
-        for row in range(8):
-            for col in range(8):
-                self.game.board[row][col] = Empty(None, Color.EMPTY)
-        self.game.board[0][0] = King(self.game, Color.WHITE)
-        self.game.board[7][3] = King(self.game, Color.BLACK)
-        self.game.board[1][0] = Pawn(self.game, Color.BLACK)
-        self.game.board[3][5] = Pawn(self.game, Color.WHITE)
-        self.game.board[4][1] = Rook(self.game, Color.WHITE)
-        self.game.board[2][2] = Bishop(self.game, Color.BLACK)
-        self.game.board[2][1] = Bishop(self.game, Color.BLACK)
-        self.assertEqual(self.game.get_piece_coordinate(self.game.board[0][0]), Coordinate(0, 0))
-        self.assertEqual(self.game.get_piece_coordinate(self.game.board[7][3]), Coordinate(7, 3))
-        self.assertEqual(self.game.get_piece_coordinate(self.game.board[1][0]), Coordinate(1, 0))
-        self.assertEqual(self.game.get_piece_coordinate(self.game.board[3][5]), Coordinate(3, 5))
-        self.assertEqual(self.game.get_piece_coordinate(self.game.board[4][1]), Coordinate(4, 1))
-        self.assertEqual(self.game.get_piece_coordinate(self.game.board[2][2]), Coordinate(2, 2))
-        self.assertEqual(self.game.get_piece_coordinate(self.game.board[2][1]), Coordinate(2, 1))
-
-
-class TestChessGame(unittest.TestCase):
     def test_to_piece_returns_correct_piece(self):
-        game = ChessGame()
-        piece = game.to_piece("r")
+        piece = self.game.to_piece("r", 7, 0)
         self.assertEqual(type(piece), Rook)
-        piece = game.to_piece("R")
+        self.assertEqual(piece.color, Color.BLACK)
+
+        piece = self.game.to_piece("R", 0, 0)
         self.assertEqual(type(piece), Rook)
+        self.assertEqual(piece.color, Color.WHITE)
 
-        piece = game.to_piece("P")
+        piece = self.game.to_piece("P", 1, 0)
         self.assertEqual(type(piece), Pawn)
-        piece = game.to_piece("p")
+        self.assertEqual(piece.color, Color.WHITE)
+
+        piece = self.game.to_piece("p", 6, 0)
         self.assertEqual(type(piece), Pawn)
+        self.assertEqual(piece.color, Color.BLACK)
 
-        piece = game.to_piece("N")
+        piece = self.game.to_piece("N", 0, 1)
         self.assertEqual(type(piece), Knight)
-        piece = game.to_piece("n")
+        self.assertEqual(piece.color, Color.WHITE)
+
+        piece = self.game.to_piece("n", 7, 1)
         self.assertEqual(type(piece), Knight)
+        self.assertEqual(piece.color, Color.BLACK)
 
-        piece = game.to_piece("B")
+        piece = self.game.to_piece("B", 0, 2)
         self.assertEqual(type(piece), Bishop)
-        piece = game.to_piece("b")
+        self.assertEqual(piece.color, Color.WHITE)
+
+        piece = self.game.to_piece("b", 7, 2)
         self.assertEqual(type(piece), Bishop)
+        self.assertEqual(piece.color, Color.BLACK)
 
-        piece = game.to_piece("Q")
+        piece = self.game.to_piece("Q", 0, 3)
         self.assertEqual(type(piece), Queen)
-        piece = game.to_piece("q")
-        self.assertEqual(type(piece), Queen)
+        self.assertEqual(piece.color, Color.WHITE)
 
-        piece = game.to_piece("K")
+        piece = self.game.to_piece("q", 7, 3)
+        self.assertEqual(type(piece), Queen)
+        self.assertEqual(piece.color, Color.BLACK)
+
+        piece = self.game.to_piece("K", 0, 4)
         self.assertEqual(type(piece), King)
-        piece = game.to_piece("k")
+        self.assertEqual(piece.color, Color.WHITE)
+
+        piece = self.game.to_piece("k", 7, 4)
         self.assertEqual(type(piece), King)
+        self.assertEqual(piece.color, Color.BLACK)
+
+
+class TestLoadFen(unittest.TestCase):
+    def setUp(self) -> None:
+        self.game = ChessGame(fen="start")
 
     def test_load_fen_gives_correct_board(self):
         game = ChessGame()
@@ -760,14 +885,14 @@ class TestChessGame(unittest.TestCase):
 
         game.load_fen("8/8/1r1R4/8/8/8/8/8 w KQkq - 0 1")
         self.assertEqual(type(game.board[5][1]), Rook)
-        self.assertEqual(game.board[5][1].get_color(), Color.BLACK)
+        self.assertEqual(game.board[5][1].color, Color.BLACK)
 
         self.assertEqual(type(game.board[5][3]), Rook)
-        self.assertEqual(game.board[5][3].get_color(), Color.WHITE)
+        self.assertEqual(game.board[5][3].color, Color.WHITE)
 
         game.load_fen("8/8/8/8/8/8/8/k7 w KQkq - 0 1")
         self.assertEqual(type(game.board[0][0]), King)
-        self.assertEqual(game.board[0][0].get_color(), Color.BLACK)
+        self.assertEqual(game.board[0][0].color, Color.BLACK)
 
     def test_load_fen_restores_correct_moves_and_clock(self):
         game = ChessGame()

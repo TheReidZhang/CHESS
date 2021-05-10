@@ -7,7 +7,7 @@ class Knight(PieceInterface):
     """
     def get_moves(self) -> list:
         """
-        :return: a list of all available moves of the piece in order
+        a list of all available moves of the piece in order
         by directions (clockwise).
         """
         row, col = self.x, self.y
