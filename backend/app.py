@@ -71,6 +71,10 @@ def create_app(db_url="init"):
         request_data = json.loads(request.data)
         return driver.get_user_info(request_data["user"])
 
+    @app.route('/rankings', methods=['GET'])
+    def get_rankings():
+        return driver.get_rankings()
+
     return app
 
 

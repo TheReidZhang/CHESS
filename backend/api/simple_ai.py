@@ -1,7 +1,5 @@
 import copy
 from api.piece.utility import Utility
-from colorama import Fore, Style
-from api.piece.piece_interface import Color
 
 
 class SimpleAI:

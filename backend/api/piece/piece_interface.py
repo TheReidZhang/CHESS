@@ -33,7 +33,7 @@ class PieceInterface:
 
     def get_checked_moves(self) -> dict:
         """
-        :return: a dictionary. Key is "moves", and value is a list of all available moves that will not
+        a dictionary. Key is "moves", and value is a list of all available moves that will not
         make the same side king being checked after the move.
         """
         moves = self.get_moves()

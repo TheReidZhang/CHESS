@@ -19,7 +19,7 @@ class King(PieceInterface):
 
     def get_moves(self) -> list:
         """
-        :return: a list of all available moves of the piece in order
+        a list of all available moves of the piece in order
         by directions (up, upper right, right, lower right, down, lower left, left, upper left).
         """
         row, col = self.x, self.y
@@ -54,7 +54,7 @@ class King(PieceInterface):
 
     def get_checked_moves(self) -> dict:
         """
-        :return: a dictionary. Key is "moves", and value is a list of all available moves that will not
+        a dictionary. Key is "moves", and value is a list of all available moves that will not
         make the king being checked after the move.
         """
         moves = self.get_moves()

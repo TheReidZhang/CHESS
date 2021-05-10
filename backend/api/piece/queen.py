@@ -7,7 +7,7 @@ class Queen(PieceInterface):
     """
     def get_moves(self) -> list:
         """
-        :return: a list of all available moves of the piece in order
+        a list of all available moves of the piece in order
         by directions (up, upper right, right, lower right, down, lower left, left, upper left).
         """
         row, col = self.x, self.y

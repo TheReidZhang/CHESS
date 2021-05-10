@@ -158,8 +158,8 @@ class ChessBoard extends Component {
         }),
       })
         .then((response) => response.json())
-        .then((json) => {
-          if (json["valid"]) {
+        .then((json1) => {
+          if (json1["valid"]) {
             this.audio.play();
             fetch("/chess/info", {
               headers: { "Content-Type": "application/json" },
@@ -175,14 +175,31 @@ class ChessBoard extends Component {
                   const status = json["status"];
                   const turn = json["turn"];
                   const history = json["history"];
-                  this.setState({
-                    fen: fen,
-                    pieceSquare: "",
-                    status: status,
-                    turn: turn,
-                    history: history,
-                    validMoves: [],
-                  });
+                  this.setState(
+                    {
+                      fen: fen,
+                      pieceSquare: "",
+                      status: status,
+                      turn: turn,
+                      history: history,
+                      validMoves: [],
+                    },
+                    () => {
+                      const update_is_being_checked = json1["is_being_checked"];
+                      if (update_is_being_checked) {
+                        setTimeout(function () {
+                          alert("check!");
+                        }, 0);
+                      }
+
+                      const update_game_status = json1["game_status"];
+                      if (update_game_status !== "Continue") {
+                        setTimeout(function () {
+                          alert(update_game_status);
+                        }, 0);
+                      }
+                    }
+                  );
                 } else {
                   alert("Log in first or this session does not belong to you!");
                   const { history } = this.props;
@@ -194,21 +211,9 @@ class ChessBoard extends Component {
                   squareStyles: squareStyling({ validMoves, history }),
                 }));
               });
-            const update_is_being_checked = json["is_being_checked"];
-            if (update_is_being_checked) {
-              setTimeout(function () {
-                alert("check!");
-              }, 0);
-            }
-            const update_game_status = json["game_status"];
-            if (update_game_status !== "Continue") {
-              setTimeout(function () {
-                alert(update_game_status);
-              }, 0);
-            }
 
             return;
-          } else if (!json["validSession"]) {
+          } else if (!json1["validSession"]) {
             alert("Log in first!");
             const { history } = this.props;
             history.push("/");
