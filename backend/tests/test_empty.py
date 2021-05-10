@@ -8,7 +8,7 @@ class TestRook(unittest.TestCase):
     def setUp(self) -> None:
         fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1"
         self.chess_game = ChessGame(fen=fen)     # empty board
-        self.chess_game.board[3][3] = Empty(self.chess_game, Color.EMPTY)
+        self.chess_game.board[3][3] = Empty(self.chess_game, Color.EMPTY, 3, 3)
 
     def test_get_moves(self):
         actual = self.chess_game.board[3][3].get_moves()
@@ -21,7 +21,7 @@ class TestRook(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def test_get_color(self):
-        actual = self.chess_game.board[3][3].get_color()
+        actual = self.chess_game.board[3][3].color
         expected = Color.EMPTY
         self.assertEqual(actual, expected)
 

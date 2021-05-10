@@ -1,5 +1,4 @@
 from api.piece.piece_interface import PieceInterface, Color
-from api.piece.coordinate import Coordinate
 from api.piece.rook import Rook
 
 
@@ -7,7 +6,7 @@ class King(PieceInterface):
     """
     Piece King
     """
-    def __init__(self, game: 'ChessGame', color: Color):
+    def __init__(self, game: 'ChessGame', color: Color, x: int, y: int):
         """
         The firstMove is true means the king has not moved yet.
         If it is false, it means the king has moved.
@@ -15,16 +14,15 @@ class King(PieceInterface):
         :param game: a chess game instance
         :param color: indicate the color of the piece
         """
-        super().__init__(game, color)
+        super().__init__(game, color, x, y)
         self.firstMove = True   # True if the king has not been moved
 
     def get_moves(self) -> list:
         """
-        :return: a list of all available moves of the piece in order
+        a list of all available moves of the piece in order
         by directions (up, upper right, right, lower right, down, lower left, left, upper left).
         """
-        coordinate = self.game.get_piece_coordinate(self)
-        row, col = coordinate.get_tuple()
+        row, col = self.x, self.y
         directions = [[1, 0],       # up
                       [1, 1],       # upper right
                       [0, 1],       # right
@@ -40,9 +38,9 @@ class King(PieceInterface):
             ret_col = col + direction[1]
             if not PieceInterface.is_valid_coord(ret_row, ret_col):
                 continue
-            tar_color = self.game.board[ret_row][ret_col].get_color()
+            tar_color = self.game.board[ret_row][ret_col].color
             if tar_color != self.color:
-                moves.append(Coordinate(ret_row, ret_col))
+                moves.append((ret_row, ret_col))
 
         return moves
 
@@ -56,22 +54,22 @@ class King(PieceInterface):
 
     def get_checked_moves(self) -> dict:
         """
-        :return: a dictionary. Key is "moves", and value is a list of all available moves that will not
+        a dictionary. Key is "moves", and value is a list of all available moves that will not
         make the king being checked after the move.
         """
         moves = self.get_moves()
         checked_moves = []
         if len(moves) > 0:
-            coordinate = self.game.get_piece_coordinate(self)
+            coordinate = (self.x, self.y)
             for move in moves:
                 if not self.game.is_being_checked_after_move(coordinate, move):
                     checked_moves.append(move)
         row = 0 if self.color == Color.WHITE else 7
 
         if self.castling(king_side=True):
-            checked_moves.append(Coordinate(row, 6))
+            checked_moves.append((row, 6))
         if self.castling(king_side=False):
-            checked_moves.append(Coordinate(row, 2))
+            checked_moves.append((row, 2))
         return {"moves": checked_moves}
 
     def castling(self, king_side=True) -> bool:
@@ -117,9 +115,9 @@ class King(PieceInterface):
         row = 0 if self.color == Color.WHITE else 7
         col = 5 if king_side else 2
 
-        if self.game.is_being_checked_after_move(Coordinate(row, 4), Coordinate(row, col)):
+        if self.game.is_being_checked_after_move((row, 4), (row, col)):
             return True
-        if self.game.is_being_checked_after_move(Coordinate(row, 4), Coordinate(row, col+1)):
+        if self.game.is_being_checked_after_move((row, 4), (row, col + 1)):
             return True
         return False
 

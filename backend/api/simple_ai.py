@@ -1,7 +1,5 @@
 import copy
-from api.piece.coordinate import Coordinate
-from colorama import Fore, Style
-from api.piece.piece_interface import Color
+from api.piece.utility import Utility
 
 
 class SimpleAI:
@@ -36,7 +34,7 @@ class SimpleAI:
         ret = 0
         for row in range(8):
             for col in range(8):
-                if board[row][col].get_color() != self.game.turn:
+                if board[row][col].color != self.game.turn:
                     ret -= self.values[board[row][col].to_string()]
                 else:
                     ret += self.board_value[row][col]
@@ -52,9 +50,9 @@ class SimpleAI:
         max_score = -10000
         for row in range(8):
             for col in range(8):
-                moves = self.game.get_checked_moves(Coordinate(row,col))["moves"]
+                moves = self.game.get_checked_moves((row, col))["moves"]
                 for coordinate in moves:
-                    r1, c1 = Coordinate.decode(coordinate).get_tuple()
+                    r1, c1 = Utility.decode(coordinate)
                     src_piece = board[row][col]
                     tar_piece = board[r1][c1]
                     board[r1][c1] = src_piece

@@ -1,16 +1,6 @@
 # How to run the ChessGame
 
-1.Install docker at https://www.docker.com/products/docker-desktop, this is the only thing you need to run our app.
-
-2.Install all dependencies with the following command under project directory after you clone it from Gitlab:
-    
-    docker-compose build --no-cache
-
-3.Run following command under project directory to start both backend and frontend server:
-    
-    docker-compose up -d
-
-4.Go to http://localhost:3000 to play the game
+Now our Chess game is deployed at http://3.82.144.60/
 
 # How to play the ChessGame
 ## Sign-in Page
@@ -19,7 +9,9 @@ You will first see the sign-in page with several quotes about chess. One top rig
 This brings you to the Main Menu page.
 ## Main Menu
 ### New Game: 
-This gives you the options of different playing modes. Choose either "Easy" or "PvP" to play against the computer AI or with yourself or your friend. Once you create a new game session, a user interface of a standard chess gameboard UI with 8 files, 8 rank with black and white pieces on their initial positions will show up. The user will always be the white side.
+This gives you the options of different playing modes. Choose either "Easy", "Advanced" or "PvP" to play against the computer AI with easy or advanced difficulty, or you can play with yourself or your friend. Once you create a new game session, a user interface of a standard chess gameboard UI with 8 files, 8 rank with black and white pieces on their initial positions will show up. The user will always be the white side.
+
+Note: 1)Sound effect for placing a piece is added. 2)The "Advanced" mode might require 5 seconds for a piece to be placed given the advanced AI algorithm.  
 ### Resume Game: 
 Allows you to resume an unfinished session of chess game. 
 Whenever you interrupt your onging game session by leaving the chessboard UI page, the session will be automatically saved for resuming. To resume a session, you will have to remember your session ID before leaving the chessboard UI. You can find the session ID number of your current game session in the URL bar at the end of the address while you are playing. 
@@ -27,6 +19,9 @@ Click on the resume button on the main menu to choose the game session you want 
 ### Replays: 
 Allows you to playback any games one step by one step. Likewise, the replay button will list all ongoing and finished games in sorted order. You can choose one with the session ID for the game you want to replay. Then the chessboard will show up with the left and right arrows under the board. You can view the previous or next move by clicking on them.   
 There won't be a game info box, menu bar, and promotion options when you enter the UI through the "replay" button.   
+### Rankings:
+Now our server provides the ranking of the top 5 players with highest scores globally.
+Clicking on the rankings button will give you a window that shows the rank and the user names of the top 5 players with their cumulative scores. 
 
 ## The Game Board UI: 
 ### Game Info Box
@@ -36,13 +31,13 @@ There are four possible game status: “Continue”, “Draw”, “WhiteLoss”
 ### The Account Menu 
 The account menu is on the top right corner and above the menu bar. 
 1. Total Hours Played: Allows you to check your total hours played under the current user account.
-2. Profile: Not Implemented Yet.
-3. Settings: Not Implemented Yet.
-4. Log out: Clicking on log out brings you back to the sign-in page. 
-
+2. Score: The cumulative score of the logged-in user.
+3. Log out: Clicking on log out brings you back to the sign-in page. 
+### The Sound Icon
+Next to the accuont menu there is a sound icon that plays music whenever the user clicks on it.
 ### The Menu Bar
 On the top right corner is the drop-down menu navigation bar that allows you to takeback a step, resign to your component, or ask for a draw. Click on it to open/collapse. 
-1. Takeback: Under "PvP" mode, every time when you click on takeback, the game will withdrawl the very last piece that's just been moved. You are allowed to take back steps until the game restore to the starting point. Under "Easy" mode, since the black side is the computer and it moves immediately after you move, each time you click on "takeback", the game will withdrwal both your and the computer's move so you can redo your last move.  
+1. Takeback: Under "PvP" mode, every time when you click on takeback, the game will withdrawl the very last piece that's just been moved. You are allowed to take back steps until the game restore to the starting point. Under "Easy" and "Advanced" mode, since the black side is the computer and it moves immediately after you move, each time you click on "takeback", the game will withdrwal both your and the computer's move so you can redo your last move.  
 2. Resign: Allows you to resign to the other player. (Not Implemented Yet)
 3. Draw: Allows you to ask for a draw with the other player. (Not Implementd Yet)
 
@@ -120,3 +115,36 @@ Yiting Wang: 16%
 1. Exposed api through flask in app.py
 2. Tested app.py
 3. Fixed bugs in api.py
+
+# Work Distribution (sprint 3)
+Zijian Zhang: 17%
+1. Optimize chessgame and piece functions.
+2. Implement advanced ai.
+3. Add a node express server to frontend.
+4. Manage session and cors making sure only one user can log in one place.
+5. Add sound effect and BGM for frontend.
+6. Deploy project on EC2 instance.
+
+Zhenghang Hu: 17%
+1. Added tests for api.
+2. Updated developer documentation.
+3. Optimize chessgame and piece functions.
+4. Implement advanced ai.
+
+Ying Liu: 17%
+1. Refactored backend chess game
+2. Updated backend testing cases.
+
+Xiao Yang: 17%
+1. Added the score feature so that users can know their score and the game of PvE has more fun.
+2. Learned API, Database, and frontend stuff so that I am able to implement and test the score feature.
+3. Edited the database table.
+4. Added comments for api.py file.
+5. Reviewed other members’ code and corrected some mistake.
+
+Cicong Tian: 16%
+1. Updated user documentation
+2. Added tests for advanced_ai
+
+Yiting Wang: 16%
+1. Helped refactor app.py

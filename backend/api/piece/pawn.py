@@ -1,5 +1,4 @@
 from api.piece.piece_interface import PieceInterface, Color
-from api.piece.coordinate import Coordinate
 
 
 class Pawn(PieceInterface):
@@ -39,10 +38,17 @@ class Pawn(PieceInterface):
         """
         :return: a list of all available moves and captures of a pawn.
         """
-        coordinate = self.game.get_piece_coordinate(self)
-        row, col = coordinate.get_tuple()
+        row, col = self.x, self.y
         direction = self.color.value
         moves = []
+
+        # captures
+        attack_row = row + direction
+        for attack_col in [col + 1, col - 1]:
+            if PieceInterface.is_valid_coord(attack_row, attack_col) and \
+                    ((self.game.board[attack_row][attack_col].color not in [self.color, Color.EMPTY]) or
+                     (self.en_passant(attack_col, row, col))):
+                moves.append((attack_row, attack_col))
 
         # moves
         steps = 1
@@ -51,18 +57,11 @@ class Pawn(PieceInterface):
         for step in range(1, steps + 1):
             ret_row = row + step * direction
             if PieceInterface.is_valid_coord(ret_row, col) and \
-                    self.game.board[ret_row][col].get_color() == Color.EMPTY:
-                moves.append(Coordinate(ret_row, col))
+                    self.game.board[ret_row][col].color == Color.EMPTY:
+                moves.append((ret_row, col))
             else:
                 break
 
-        # captures
-        attack_row = row + direction
-        for attack_col in [col + 1, col - 1]:
-            if PieceInterface.is_valid_coord(attack_row, attack_col) and \
-                    ((self.game.board[attack_row][attack_col].get_color() not in [self.color, Color.EMPTY]) or
-                     (self.en_passant(attack_col, row, col))):
-                moves.append(Coordinate(attack_row, attack_col))
         return moves
 
     def to_string(self) -> str:

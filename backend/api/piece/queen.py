@@ -1,5 +1,4 @@
 from api.piece.piece_interface import PieceInterface, Color
-from api.piece.coordinate import Coordinate
 
 
 class Queen(PieceInterface):
@@ -8,11 +7,10 @@ class Queen(PieceInterface):
     """
     def get_moves(self) -> list:
         """
-        :return: a list of all available moves of the piece in order
+        a list of all available moves of the piece in order
         by directions (up, upper right, right, lower right, down, lower left, left, upper left).
         """
-        coordinate = self.game.get_piece_coordinate(self)
-        row, col = coordinate.get_tuple()
+        row, col = self.x, self.y
         directions = [[1, 0],       # up
                       [1, 1],       # upper right
                       [0, 1],       # right
@@ -29,12 +27,15 @@ class Queen(PieceInterface):
             ret_col = col + direction[1]
 
             while PieceInterface.is_valid_coord(ret_row, ret_col):
-                tar_color = self.game.board[ret_row][ret_col].get_color()
+                tar_color = self.game.board[ret_row][ret_col].color
                 if tar_color == self.color:
                     break
-                moves.append(Coordinate(ret_row, ret_col))
+
                 if tar_color != Color.EMPTY:
+                    moves.insert(0, (ret_row, ret_col))
                     break
+                moves.append((ret_row, ret_col))
+
                 ret_row += direction[0]
                 ret_col += direction[1]
         return moves

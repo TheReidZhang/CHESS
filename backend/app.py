@@ -1,96 +1,79 @@
-from flask import Flask, request, json, session
+from flask import Flask, request, json
 from api.api import ChessAPI
 
 
 def create_app(db_url="init"):
     app = Flask(__name__)
-    app.secret_key = "TEAM5"
     driver = ChessAPI(db_url)
 
     @app.route('/chess/info', methods=['POST'])
     def fen():
-        if "user" in session:
-            request_data = json.loads(request.data)
-            ret = driver.get_info(request_data, session["user"])
-            return ret
-        return {"valid": False}
+        request_data = json.loads(request.data)
+        ret = driver.get_info(request_data)
+        return ret
 
     @app.route('/chess/new', methods=['POST'])
     def new():
-        if "user" in session:
-            mode = json.loads(request.data)["mode"]
-            ret = driver.create_game(session["user"], mode)
-            return ret
-        return {"valid": False}
+        request_data = json.loads(request.data)
+        mode = request_data["mode"]
+        user = request_data["user"]
+        ret = driver.create_game(user, mode)
+        return ret
 
     @app.route('/chess/update', methods=['POST'])
     def result():
-        if "user" in session:
-            request_data = json.loads(request.data)
-            ret = driver.update_game(request_data, session["user"])
-            return ret
-        return {"valid": False}
+        request_data = json.loads(request.data)
+        return driver.update_game(request_data)
 
-    @app.route('/chess/<session_id>/<coordinate>', methods=['GET'])
+    @app.route('/chess/<session_id>/<coordinate>', methods=['POST'])
     def show(session_id, coordinate):
-        if "user" in session:
-            session_id = int(session_id)
-            ret = driver.get_checked_moves({"session_id": session_id, "coordinate": coordinate}, session["user"])
-            return ret
-        return {"valid": False}
+        session_id = int(session_id)
+        user = json.loads(request.data)["user"]
+        ret = driver.get_checked_moves({"session_id": session_id, "coordinate": coordinate}, user)
+        return ret
 
-    @app.route('/resume', methods=['GET'])
+    @app.route('/resume', methods=['POST'])
     def resume():
-        if "user" in session:
-            return driver.resume_game(session["user"])
-        return {"valid": False}
+        request_data = json.loads(request.data)
+        return driver.resume_game(request_data["user"])
 
-    @app.route('/replays', methods=['GET'])
+    @app.route('/replays', methods=['POST'])
     def replays():
-        if "user" in session:
-            return driver.replay_game(session["user"])
-        return {"valid": False}
+        request_data = json.loads(request.data)
+        return driver.replay_game(request_data["user"])
 
     @app.route('/undo', methods=['POST'])
     def undo():
-        if "user" in session:
-            request_data = json.loads(request.data)
-            return driver.undo(session["user"], request_data["session_id"])
-        return {"valid": False}
+        request_data = json.loads(request.data)
+        return driver.undo(request_data["user"], request_data["session_id"])
 
     @app.route('/replay', methods=['POST'])
     def replay():
-        if "user" in session:
-            request_data = json.loads(request.data)
-            return driver.replay(session["user"], request_data["session_id"], request_data["step"])
-        return {"valid": False}
+        request_data = json.loads(request.data)
+        user = request_data["user"]
+        session_id = request_data["session_id"]
+        step = request_data["step"]
+        return driver.replay(user, session_id, step)
 
     # for user account
     @app.route('/signup', methods=['POST'])
     def signup():
         request_data = json.loads(request.data)
-        ret = driver.sign_up(request_data)
-        return ret
+        return driver.sign_up(request_data)
 
     @app.route('/login', methods=['POST'])
     def sign_in():
         request_data = json.loads(request.data)
-        ret = driver.login(request_data)
-        if ret["valid"]:
-            session["user"] = request_data["username"]
-        return ret
+        return driver.login(request_data)
 
-    @app.route('/logout', methods=['GET'])
-    def logout():
-        session.pop("user", None)
-        return {"msg": "logged out"}
-
-    @app.route('/user', methods=['GET'])
+    @app.route('/user', methods=['POST'])
     def user_info():
-        if "user" in session:
-            ret = driver.get_user_info(session["user"])
-            return ret
-        return {"valid": False}
+        request_data = json.loads(request.data)
+        return driver.get_user_info(request_data["user"])
+
+    @app.route('/rankings', methods=['GET'])
+    def get_rankings():
+        return driver.get_rankings()
 
     return app
 
