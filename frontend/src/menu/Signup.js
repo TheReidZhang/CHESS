@@ -16,6 +16,7 @@ function Signup(props) {
     let pwd = passwordRef.current.value;
 
     fetch("/signup", {
+      headers: { "Content-Type": "application/json" },
       method: "POST",
       body: JSON.stringify({
         username: user,

@@ -5,7 +5,8 @@ from api.advanced_ai import AdvancedAI
 import random
 import datetime
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Float, and_, select
-
+import os
+import sys
 
 class ChessAPI:
     """
@@ -22,6 +23,8 @@ class ChessAPI:
         """
         if db_url == "init":
             db_url = 'postgresql+psycopg2://postgres:cmsc435team5@chess.czqnldjtsqip.us-east-2.rds.amazonaws.com:5432'
+        db_url = os.path.join('sqlite:///' + os.getcwd(), 'game.db')
+
         self.engine = create_engine(db_url)
         meta = MetaData()
 
